@@ -12,12 +12,12 @@ use \Endroid\QrCode\RoundBlockSizeMode;
 use \Endroid\QrCode\Writer\PngWriter;
 use \Endroid\QrCode\QrCode as EndroidQrCode;
 use \Endroid\QrCode\Color\Color;
-use Endroid\QrCode\ErrorCorrectionLevel;
+use \Endroid\QrCode\ErrorCorrectionLevel;
 use \Endroid\QrCode\Label\Label;
 use \Endroid\QrCode\Logo\Logo;
-use Endroid\QrCode\Writer\Result\ResultInterface;
-use PHPFuser\Enum\ECLevel;
-use PHPFuser\QrCodeResult;
+use \Endroid\QrCode\Writer\Result\ResultInterface;
+use \PHPFuser\Enum\ECLevel;
+use \PHPFuser\QrCodeResult;
 
 /**
  * @author Senestro

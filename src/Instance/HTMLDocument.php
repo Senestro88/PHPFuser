@@ -377,7 +377,7 @@ class HTMLDocument {
         // Get the names for the downloadable files.
         $downloadNames = $this->getDownloadNames();
         // Use a utility function to trigger the HTML download.
-        Utils::downloadContent($html, $downloadNames['html']);
+        Utils::downloadData($html, $downloadNames['html']);
     }
 
     /**

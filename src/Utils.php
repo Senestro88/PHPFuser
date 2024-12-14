@@ -1134,7 +1134,7 @@ class Utils {
      *
      * @return bool Returns true if the download is successfully initiated; false otherwise.
      */
-    public static function downloadContent(string $content, string $filename, string $mimeType = 'application/octet-stream'): bool {
+    public static function downloadData(string $content, string $filename, string $mimeType = 'application/octet-stream'): bool {
         // Check if headers have not been sent
         if (!self::headersSent()) {
             // Send necessary headers for content download
@@ -1589,7 +1589,7 @@ class Utils {
      * @return bool
      */
     public static function clearCache(): bool {
-        if(!\headers_sent()){
+        if (!\headers_sent()) {
             @header("Expires: Tue, 01 Jan 2000 00:00:00 GMT");
             @header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
             @header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -3337,6 +3337,100 @@ class Utils {
         } else {
             return substr($data, 0, -$length);
         }
+    }
+
+    /**
+     * Converts a GD image resource into a binary string.
+     *
+     * @param \GdImage $imageResource GD image resource to be converted.
+     * @param string $resourceFormat Format to output the binary (e.g., "png", "jpeg"). Defaults to "png".
+     * @return string Binary representation of the image.
+     */
+    public static function convertImageResourceIntoBinary(\GdImage $imageResource, string $resourceFormat = "png"): string {
+        $binary = "";
+        $supportedFormats = ["png", "jpeg", "jpg", "gif", "webp"];
+        if (in_array($resourceFormat, $supportedFormats)) {
+            // Start output buffering
+            ob_start();
+            // Output the image to the buffer based on the specified format
+            switch (strtolower($resourceFormat)) {
+                case 'png':
+                    imagepng($imageResource);
+                    break;
+                case 'jpg':
+                case 'jpeg':
+                    imagejpeg($imageResource);
+                    break;
+                case 'gif':
+                    imagegif($imageResource);
+                    break;
+                default:
+                    imagewebp($imageResource);
+                    break;
+            }
+            // Retrieve the content of the buffer
+            $binary = ob_get_contents();
+            // Clean and close the buffer
+            ob_end_clean();
+            // Free up memory
+            imagedestroy($imageResource);
+        }
+        return $binary;
+    }
+
+    /**
+     * Converts a GD image resource into a binary image with a logo overlaid.
+     *
+     * @param \GdImage $imageResource GD image resource to be processed.
+     * @param string $logoFilename Path to the logo file.
+     * @return string|null Binary representation of the resulting image, or null if logo file is invalid.
+     */
+    public static function addLogoIntoImageFromImageResource(\GdImage $imageResource, string $logoFilename): ?string {
+        return self::convertImageResourceIntoBinary($imageResource, $logoFilename);
+    }
+
+    /**
+     * Overlays a logo onto an image represented as binary data.
+     *
+     * @param string $imageBinary Binary representation of the base image.
+     * @param string $logoFilename Path to the logo file (PNG format expected).
+     * @return string|null Binary representation of the resulting image, or null if the logo file is invalid.
+     */
+    public static function addLogoIntoImageFromImageBinary(string $imageBinary, string $logoFilename): ?string {
+        if (File::isFile($logoFilename)) {
+            // Create image resources from binary data and logo file
+            $source = imagecreatefromstring($imageBinary);
+            $sw = imagesx($source);
+            $sh = imagesy($source);
+            $logo = imagecreatefromstring(File::getFileContent($logoFilename));
+            $lw = imagesx($logo);
+            $lh = imagesy($logo);
+            // Limit logo size to 12% of the base image's dimensions
+            $lmw = $sw * 0.12; // logo max width
+            $lmh = $sh * 0.12; // logo max height
+            // Calculate resized dimensions while maintaining aspect ratio
+            $scale = ($lw > $lmw || $lh > $lmh) ? min($lmw / $lw, $lmh / $lh) : 1;
+            $nlw = (int)($lw * $scale);
+            $nlh = (int)($lh * $scale);
+            // Create a resized version of the logo
+            $resizedLogo = imagecreatetruecolor($nlw, $nlh);
+            imagesavealpha($resizedLogo, true);
+            $transparent = imagecolorallocatealpha($resizedLogo, 255, 255, 255, 127);
+            imagefill($resizedLogo, 0, 0, $transparent);
+            imagecopyresampled($resizedLogo, $logo, 0, 0, 0, 0, $nlw, $nlh, $lw, $lh);
+            // Center the resized logo on the base image
+            $x = ($sw - $nlw) / 2;
+            $y = ($sh - $nlh) / 2;
+            imagecopy($source, $resizedLogo, $x, $y, 0, 0, $nlw, $nlh);
+            // Convert the resulting image back to binary
+            $result = self::convertImageResourceIntoBinary($source);
+            // Clean up resources
+            imagedestroy($source);
+            imagedestroy($logo);
+            imagedestroy($resizedLogo);
+            return $result;
+        }
+        return null;
     }
 
 

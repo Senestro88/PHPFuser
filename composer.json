@@ -4,7 +4,7 @@
   "type": "library",
   "license": "MIT",
   "minimum-stability": "stable",
-  "version": "10.0",
+  "version": "10.1",
   "keywords": [
     "phpfuser"
   ],
@@ -54,11 +54,11 @@
     "chillerlan/php-qrcode": "^5.0",
     "chillerlan/php-authenticator": "^5.2",
     "endroid/qr-code": "^5.1",
-    "khanamiryan/qrcode-detector-decoder": "^2.0",
     "spatie/image": "^3.7",
     "dompdf/dompdf": "^3.0",
     "mpdf/mpdf": "^8.2",
-    "bacon/bacon-qr-code": "^3.0"
+    "bacon/bacon-qr-code": "^3.0",
+    "khanamiryan/qrcode-detector-decoder": "^2.0"
   },
   "suggest": {
     "ext-libsodium": "SSH2/SFTP can make use of some algorithms provided by the libsodium-php extension.",

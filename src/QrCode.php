@@ -2,10 +2,13 @@
 
 namespace PHPFuser;
 
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Encoder\Encoder;
 use \chillerlan\QRCode\QRCode as ChillerlanQrCode;
 use \chillerlan\QRCode\QROptions as ChillerlanQrOptions;
 use \Zxing\QrReader;
-
+use \BaconQrCode\Renderer\GDLibRenderer;
+use \BaconQrCode\Writer;
 
 /**
  * @author Senestro
@@ -22,6 +25,39 @@ class QrCode {
      */
     private function __construct() {
     }
+
+    /**
+     * Creates a QR code with optional logo embedding.
+     *
+     * @param string $data The data to encode into the QR code.
+     * @param string|null $logo Optional binary string of the logo image to embed in the QR code.
+     * @param int $size The size (in pixels) of the QR code.
+     * @param int $margin The margin (in pixels) around the QR code.
+     * @param string $errorCorrectionLevel The error correction level ("L", "M", "Q", "H"). Default is "H".
+     *
+     * @return string The generated QR code image as a binary string.
+     */
+    public static function create(string $data, ?string $logo = null, int $size = 400, int $margin = 2, string $errorCorrectionLevel = "H"): string {
+        // Define the mapping of error correction levels to their respective objects
+        $levels = ["L" => ErrorCorrectionLevel::L(), "M" => ErrorCorrectionLevel::M(), "Q" => ErrorCorrectionLevel::Q(), "H" => ErrorCorrectionLevel::H(),];
+        // Validate and assign the error correction level
+        $ecl = $levels[$errorCorrectionLevel] ?? ErrorCorrectionLevel::H();
+        // Initialize the renderer with the specified size and margin
+        $renderer = new GDLibRenderer($size, $margin);
+        // Create a QR code writer using the renderer
+        $writer = new Writer($renderer);
+        // Generate the QR code as a binary string
+        $result = $writer->writeString($data, Encoder::DEFAULT_BYTE_MODE_ENCODING, $ecl);
+        // Embed the logo into the QR code if provided
+        if (Utils::isNonNull($logo)) {
+            $result = Utils::addLogoIntoImageFromImageBinary($result, $logo) ?: $result;
+        }
+        // Return the final QR code image as a binary string
+        return $result;
+    }
+
+
+
 
     /**
      * Reads QR code data from an image file.
@@ -74,5 +110,21 @@ class QrCode {
         $result = (new ChillerlanQrCode($options))->readFromBlob($text);
         $result = $result->data;
         return $result;
+    }
+
+    // PRIVATE METHODS
+
+    /**
+     * Get the temporary directory path for storing qrcodes.
+     *
+     * @return string The path to the temporary directory with proper directory separators.
+     */
+    private static function getTempDir(): string {
+        // Arrange and ensure proper directory separators for the temporary directory path.
+        return Path::insert_dir_separator(Path::arrange_dir_separators(PHPFUSER['DIRECTORIES']['DATA'] . DIRECTORY_SEPARATOR . 'qrcodes' . DIRECTORY_SEPARATOR . 'temp'));
+    }
+
+    private static function createTempFilename(string $extension): string {
+        return self::getTempDir() . Utils::generateRandomFilename($extension);
     }
 }
