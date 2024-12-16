@@ -32,12 +32,12 @@ class Bridge {
      * Forward the method call to FTP functions
      * @param string $name
      * @param array $arguments
-     * @throws \PHPFuser\Exceptions\Exception
+     * @throws \PHPFuser\Exception\Exception
      */
     public function __call(string $name, array $arguments = array()) {
         $function = "ftp_{$name}";
         if (!function_exists($function)) {
-            throw new \PHPFuser\Exceptions\Exception("{$function} is not a valid FTP function");
+            throw new \PHPFuser\Exception\Exception("{$function} is not a valid FTP function");
         } else {
             // Add the stream to the beginning of the arguments
             array_unshift($arguments, $this->connection);

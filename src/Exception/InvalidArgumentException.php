@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPFuser\Exceptions;
+namespace PHPFuser\Exception;
 
 /**
  * @author Senestro

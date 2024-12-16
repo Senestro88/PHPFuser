@@ -3,8 +3,8 @@
 namespace PHPFuser;
 
 use \PHPFuser\Utils;
-use \PHPFuser\Exceptions\Exception;
-use \PHPFuser\Exceptions\InvalidArgumentException;
+use \PHPFuser\Exception\Exception;
+use \PHPFuser\Exception\InvalidArgumentException;
 
 /**
  * @author Senestro
@@ -26,8 +26,8 @@ class Aes {
      * @param string $key The encryption key
      * @param string $cm The encryption cipher method
      * @return bool|string Returns a raw binary string on success, otherwise returns false on failure
-     * @throws \PHPFuser\Exceptions\Exception
-     * @throws \PHPFuser\Exceptions\InvalidArgumentException
+     * @throws \PHPFuser\Exception\Exception
+     * @throws \PHPFuser\Exception\InvalidArgumentException
      */
     public static function enc(string $content, string $key, string $cm = "aes-128-cbc"): bool|string {
         // Check if the provided cipher method is valid
@@ -75,8 +75,8 @@ class Aes {
      * @param string $content The encrypted content to decrypt
      * @param string $key The decryption key
      * @param string $cm The encryption cipher method
-     * @throws \PHPFuser\Exceptions\Exception
-     * @throws \PHPFuser\Exceptions\InvalidArgumentException
+     * @throws \PHPFuser\Exception\Exception
+     * @throws \PHPFuser\Exception\InvalidArgumentException
      */
     public static function dec(string $content, string $key, string $cm = "aes-128-cbc"): bool|string {
         // Check if the provided cipher method is valid

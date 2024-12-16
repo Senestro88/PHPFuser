@@ -2,8 +2,6 @@
 
 namespace PHPFuser\Instance;
 
-use \PHPFuser\Http;
-
 /**
  * @author Senestro
  */

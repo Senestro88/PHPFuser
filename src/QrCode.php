@@ -50,7 +50,7 @@ class QrCode {
         $result = $writer->writeString($data, Encoder::DEFAULT_BYTE_MODE_ENCODING, $ecl);
         // Embed the logo into the QR code if provided
         if (Utils::isNonNull($logo)) {
-            $result = Utils::addLogoIntoImageFromImageBinary($result, $logo) ?: $result;
+            $result = Utils::logoIntoImageFromImageBinary($result, $logo) ?: $result;
         }
         // Return the final QR code image as a binary string
         return $result;

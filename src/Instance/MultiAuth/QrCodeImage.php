@@ -43,7 +43,7 @@ class QrCodeImage {
                     }
                 }
                 $content = htmlspecialchars_decode(sprintf($content, $label, $secret, $issuer));
-                $qrcode = new QrCode($content);
+                $qrcode = new QrCode($content, "UTF-8", 450);
                 $result = $qrcode->createResult();
                 return $result->getDataUri();
             }
@@ -77,7 +77,7 @@ class QrCodeImage {
                     }
                 }
                 $content = htmlspecialchars_decode(sprintf($content, $label, $secret, $issuer));
-                $qrcode = new QrCode($content);
+                $qrcode = new QrCode($content, "UTF-8", 450);
                 $result = $qrcode->createResult();
                 $tempPath = Path::insert_dir_separator(Path::arrange_dir_separators(PHPFUSER['DIRECTORIES']['DATA'] . DIRECTORY_SEPARATOR . 'multiauth' . DIRECTORY_SEPARATOR . 'temp'));
                 if ((File::createDir($tempPath))) {
@@ -87,6 +87,7 @@ class QrCodeImage {
                         $image = imagecreatefrompng($absolutePath);
                         if (Utils::isNotFalse($image) && !headers_sent()) {
                             $contentType = mime_content_type($absolutePath);
+                            File::deleteFile($absolutePath);
                             header("Expires: Mon, 7 Apr 1997 01:00:00 GMT");
                             header("Last-Modified: " . gmdate("D, d M Y H:i:s") . "GMT");
                             header("Cache-Control: no-store, no-cache, must-revalidate");

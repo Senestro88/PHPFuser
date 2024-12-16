@@ -4,7 +4,7 @@ namespace PHPFuser;
 
 use \PHPFuser\Utils;
 use \PHPFuser\Aes;
-use \PHPFuser\Exceptions\Session;
+use \PHPFuser\Exception\Session;
 
 /**
  * @author Senestro
@@ -12,7 +12,7 @@ use \PHPFuser\Exceptions\Session;
 class CsrfSession {
     // Private constants
     private static $name = "X-SESS-CSRF-TOKEN";
-    private static $password = "1291707412917074";
+    private static $csrfKey = "0914843909148439";
     private static $errorMessage = "";
 
     // Prevent the constructor from being initialized
@@ -72,7 +72,7 @@ class CsrfSession {
         if (self::sessionIdValid()) {
             $sessionToken = self::getToken();
             if (!self::isNull($sessionToken)) {
-                $isValid = Csrf::validateToken(self::$password, base64_decode($sessionToken));
+                $isValid = Csrf::validateToken(self::$csrfKey, base64_decode($sessionToken));
                 if ($isValid) {
                     self::unsetToken();
                 } else {
@@ -95,7 +95,7 @@ class CsrfSession {
      */
     public static function isValidToken(string $generatedToken): bool {
         if (!empty($generatedToken)) {
-            $isValid = Csrf::validateToken(self::$password, base64_decode($generatedToken));
+            $isValid = Csrf::validateToken(self::$csrfKey, base64_decode($generatedToken));
             if ($isValid) {
                 self::unsetToken();
             } else {
@@ -146,7 +146,7 @@ class CsrfSession {
      */
     public static function validateTokenFromPost(): bool {
         if (getenv("REQUEST_METHOD") === "POST" && isset($_POST[self::$name]) && !empty($_POST[self::$name])) {
-            $isValid = Csrf::validateToken(self::$password, base64_decode((string) $_POST[self::$name]));
+            $isValid = Csrf::validateToken(self::$csrfKey, base64_decode((string) $_POST[self::$name]));
             if ($isValid) {
                 self::unsetToken();
             } else {
@@ -167,7 +167,7 @@ class CsrfSession {
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
             if (isset($headers[self::$name]) && !empty($headers[self::$name])) {
-                $isValid = Csrf::validateToken(self::$password, base64_decode((string) $headers[self::$name]));
+                $isValid = Csrf::validateToken(self::$csrfKey, base64_decode((string) $headers[self::$name]));
                 if ($isValid) {
                     self::unsetToken();
                 } else {
@@ -189,7 +189,7 @@ class CsrfSession {
      * @return string
      */
     private static function generateToken(int $expires = 1440): string {
-        return Csrf::generateToken(self::$password, $expires);
+        return Csrf::generateToken(self::$csrfKey, $expires);
     }
 
     /**

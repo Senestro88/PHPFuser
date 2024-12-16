@@ -2853,10 +2853,10 @@ class Utils {
      * @param string $message
      * @param int $code
      * @param \Throwable|null $previous
-     * @return \PHPFuser\Exceptions\Exception
+     * @return \PHPFuser\Exception\Exception
      */
     public static function throwException(string $message, int $code = 0, ?\Throwable $previous = null): void {
-        throw new \PHPFuser\Exceptions\Exception($message, $code, $previous);
+        throw new \PHPFuser\Exception\Exception($message, $code, $previous);
     }
 
     /**
@@ -2864,10 +2864,10 @@ class Utils {
      * @param string $message
      * @param int $code
      * @param \Throwable|null $previous
-     * @return \PHPFuser\Exceptions\IOException
+     * @return \PHPFuser\Exception\IOException
      */
     public static function throwIOException(string $message, int $code = 0, ?\Throwable $previous = null): void {
-        throw new \PHPFuser\Exceptions\IOException($message, $code, $previous);
+        throw new \PHPFuser\Exception\IOException($message, $code, $previous);
     }
 
     /**
@@ -2875,10 +2875,10 @@ class Utils {
      * @param string $message
      * @param int $code
      * @param \Throwable|null $previous
-     * @return \PHPFuser\Exceptions\InvalidArgumentException
+     * @return \PHPFuser\Exception\InvalidArgumentException
      */
     public static function throwInvalidArgumentException(string $message, int $code = 0, ?\Throwable $previous = null): void {
-        throw new \PHPFuser\Exceptions\InvalidArgumentException($message, $code, $previous);
+        throw new \PHPFuser\Exception\InvalidArgumentException($message, $code, $previous);
     }
 
     /**
@@ -2886,10 +2886,10 @@ class Utils {
      * @param string $message
      * @param int $code
      * @param \Throwable|null $previous
-     * @return \PHPFuser\Exceptions\Session
+     * @return \PHPFuser\Exception\Session
      */
     public static function throwSessionException(string $message, int $code = 0, ?\Throwable $previous = null): void {
-        throw new \PHPFuser\Exceptions\Session($message, $code, $previous);
+        throw new \PHPFuser\Exception\Session($message, $code, $previous);
     }
 
     /**
@@ -2897,10 +2897,10 @@ class Utils {
      * @param string $message
      * @param int $code
      * @param \Throwable|null $previous
-     * @return \PHPFuser\Exceptions\Token
+     * @return \PHPFuser\Exception\Token
      */
     public static function throwTokenException(string $message, int $code = 0, ?\Throwable $previous = null): void {
-        throw new \PHPFuser\Exceptions\Token($message, $code, $previous);
+        throw new \PHPFuser\Exception\Token($message, $code, $previous);
     }
 
     /**
@@ -2954,7 +2954,7 @@ class Utils {
      * @param string $filename
      * @param string $toDirectory
      * @return bool|string Return true on success or false/string on failure
-     * @throws \PHPFuser\Exceptions\Exception
+     * @throws \PHPFuser\Exception\Exception
      */
     public static function extractPhar(string $filename, string $toDirectory): bool|string {
         $pharReadonly = ini_get('phar.readonly');
@@ -3385,7 +3385,7 @@ class Utils {
      * @param string $logoFilename Path to the logo file.
      * @return string|null Binary representation of the resulting image, or null if logo file is invalid.
      */
-    public static function addLogoIntoImageFromImageResource(\GdImage $imageResource, string $logoFilename): ?string {
+    public static function logoIntoImageFromImageResource(\GdImage $imageResource, string $logoFilename): ?string {
         return self::convertImageResourceIntoBinary($imageResource, $logoFilename);
     }
 
@@ -3396,7 +3396,7 @@ class Utils {
      * @param string $logoFilename Path to the logo file (PNG format expected).
      * @return string|null Binary representation of the resulting image, or null if the logo file is invalid.
      */
-    public static function addLogoIntoImageFromImageBinary(string $imageBinary, string $logoFilename): ?string {
+    public static function logoIntoImageFromImageBinary(string $imageBinary, string $logoFilename): ?string {
         if (File::isFile($logoFilename)) {
             // Create image resources from binary data and logo file
             $source = imagecreatefromstring($imageBinary);

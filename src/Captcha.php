@@ -75,7 +75,7 @@ class Captcha {
      * @param string $format The the image format, default to png. only png, jpg, jpeg and gif are accepted, else the default will be used.
      * @return void
      */
-    public static function createOuputImage(array $options = array(), string $namespace = "default", string $format = "png"): void {
+    public static function createOutputImage(array $options = array(), string $namespace = "default", string $format = "png"): void {
         $data = self::createImageData($options, $namespace, $format);
         if (isset($data['image'])) {
             self::sendToBrowserFromImage($data['image'], $data['format']);
