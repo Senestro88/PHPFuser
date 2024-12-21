@@ -5,7 +5,7 @@
   "license": "MIT",
   "minimum-stability": "beta",
   "prefer-stable": true,
-  "version": "10.8",
+  "version": "11.0",
   "keywords": [
     "phpfuser"
   ],
@@ -36,7 +36,7 @@
     "ext-mbstring": "*",
     "ext-bz2": "*",
     "ext-fileinfo": "*",
-    "james-heinrich/getid3": "^2.0@beta",
+    "james-heinrich/getid3": "^1.9",
     "rakibtg/sleekdb": "^2.15",
     "symfony/process": "^7.1",
     "phpmailer/phpmailer": "^6.9",
