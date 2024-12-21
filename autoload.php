@@ -40,32 +40,19 @@ if (is_dir($PHPFUSER_VENDOR_DIR) && is_readable($PHPFUSER_VENDOR_DIR)) {
 }
 
 // THE AUTOLOADER CALLBACK
-if (!function_exists("PHPFUSER_AUTOLOADER")) {
+if (!function_exists("PHPFuserAutoloader")) {
 
-    function PHPFUSER_AUTOLOADER(string $classname) {
+    function PHPFuserAutoloader(string $classname) {
         $namespace = 'PHPFuser';
         // Check if the class belongs to the PHPFuser namespace
         if (strpos($classname, $namespace, 0) === 0) {
-            // Get the relative class path by removing the namespace
-            $RELATIVE_CLASS = str_replace("$namespace\\", '', $classname);
-            $RELATIVE_PATH = str_replace('\\', DIRECTORY_SEPARATOR, $RELATIVE_CLASS) . '.php';
-            // Get the "src" directory and the OS type
-            $PHPFUSER_SRC_FIR = PHPFUSER['DIRECTORIES']['SRC'];
-            $PHPFUSER_OS = strtolower(PHPFUSER['OS']);
-            // Build the absolute class path
-            $CLASS_PATH = $PHPFUSER_SRC_FIR . DIRECTORY_SEPARATOR . $RELATIVE_PATH;
-            // If the OS is Unix, Linux, or unknown, ensure the path starts with a slash
-            if (in_array($PHPFUSER_OS, ['unix', 'linux', 'unknown'])) {
-                $CLASS_PATH = DIRECTORY_SEPARATOR . ltrim($CLASS_PATH, DIRECTORY_SEPARATOR);
-            }
-            // Check if the file exists and is readable, then require it
-            if (is_file($CLASS_PATH) && is_readable($CLASS_PATH)) {
-                require_once $CLASS_PATH;
-            }
+            $className = str_replace("$namespace\\", '', $classname);
+            $relativeName = str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php';
+            require_once PHPFUSER['DIRECTORIES']['SRC'] . $relativeName;
         }
     }
 }
 // UNREGISTER THE AUTOLOADER IF REGISTERED
-spl_autoload_unregister("PHPFUSER_AUTOLOADER");
+spl_autoload_unregister("PHPFuserAutoloader");
 // REGISTER THE AUTOLOADER IF NOT REGISTERED
-spl_autoload_register("PHPFUSER_AUTOLOADER", true, true);
+spl_autoload_register("PHPFuserAutoloader", true, true);

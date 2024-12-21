@@ -22,58 +22,6 @@ class Archive {
     }
 
     /**
-     * Creates a .zip archive from PclZip library
-     * @param string $name The name of the archive. It generate a random name when it's an empty string provided
-     * @param array $items The items can be a combination of files and directories
-     * @param string $dirname The directory to save the archive
-     * @return array|string Return string on failure which contains error message else file info
-     */
-    public static function createPclzip(string $name, array $items, string $dirname): array|string {
-        $result = "";
-        // Load the PclZip
-        Utils::loadPlugin("PclZip");
-        // Check if the PclZip class exist
-        if (class_exists("\PclZip")) {
-            // Resolve dirname path
-            $dirname = Utils::resolvePath($dirname);
-            // Make sure dirname exists or created
-            if (Utils::isString($dirname) && File::createDir($dirname)) {
-                // Filter the archive name
-                $name = self::setName($name, "zip");
-                // Arrange dirname
-                $dirname = Path::arrange_dir_separators($dirname);
-                // The archive absolute path
-                $archiveName = $dirname . DIRECTORY_SEPARATOR . $name;
-                // Delete file if exist
-                File::deleteFile($archiveName);
-                // Init PclZip
-                $archive = new \PclZip($archiveName);
-                // Loop items
-                foreach ($items as $index => $item) {
-                    // Arrange the item path
-                    $item = Path::arrange_dir_separators($item);
-                    if (File::isFile($item) || File::isDir($item)) {
-                        $removePath = Path::arrange_dir_separators(File::getDirname($item));
-                        $archive->add(Utils::resolvePath($item), PCLZIP_OPT_REMOVE_PATH, $removePath);
-                    }
-                }
-                // Check if archive is created
-                if (File::isFile($archiveName)) {
-                    clearstatcache(false, $archiveName);
-                    $result = File::getInfo($archiveName);
-                } else {
-                    $result = "Failed to create the zip archive: " . $archiveName;
-                }
-            } else {
-                $result = "Failed to create the zip archive, invalid dirname: " . $dirname;
-            }
-        } else {
-            $result = "The PclZip plugin isn't loaded";
-        }
-        return $result;
-    }
-
-    /**
      * Creates a .tgz archive
      * @param string $name The name of the archive. It generate a random name when it's an empty string provided
      * @param array $items The items can be a combination of files and directories
@@ -152,7 +100,7 @@ class Archive {
                             // Recursively iterate the directory item
                             $files = File::scanDirRecursively($item);
                             foreach ($files as $file) {
-                                $entry = Path::arrange_dir_separators(\str_replace(File::getDirname($item), "", $file), false, "/");
+                                $entry = Path::arrange_dir_separators(str_replace(File::getDirname($item), "", $file), false, "/");
                                 // When it's an empty directory or file
                                 if (File::isDir($file) && $archive->addEmptyDir($entry)) {
                                     $entries[] = $entry;

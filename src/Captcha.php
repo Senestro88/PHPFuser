@@ -568,7 +568,7 @@ class Captcha {
             }
             imagedestroy($image);
             clearstatcache(false, $filename);
-            $base64Image = Utils::convertImageToBase64($filename);
+            $base64Image = Utils::convertImageToBase64Uri($filename);
             clearstatcache(false, $filename);
             File::deleteFile($filename);
         }

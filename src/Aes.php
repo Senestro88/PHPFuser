@@ -121,14 +121,12 @@ class Aes {
         }
     }
 
-    // PRIVATE METHODS
-
     /**
      * Determine key size based on cipher method
      * @param string $cm The cipher method
      * @return int Returns 0 when the key size couldn't be determined
      */
-    private static function determineKeySizeFromCipherMethod(string $cm): int {
+    public static function determineKeySizeFromCipherMethod(string $cm): int {
         // Initialize key size to 0, default value when key size couldn't be determined
         $size = 0;
         // Check if the provided cipher method is valid

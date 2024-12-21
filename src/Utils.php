@@ -1040,23 +1040,55 @@ class Utils {
     /**
      * Generates a random text of the specified length.
      * 
-     * @param int $length The length of the random text. Defaults to 10.
+     * @param int $length The length of the random text. Defaults to 10 and max is 200.
      * @return string The generated random text.
      */
+    /**
+     * Generates a random string of the specified length.
+     *
+     * This method creates a random string using a defined set of characters 
+     * (lowercase letters, uppercase letters, and digits). The length of the 
+     * generated string is constrained to be between 10 and 300 characters.
+     *
+     * @param int $length The desired length of the random string (default is 10).
+     * @return string A randomly generated string of the specified length.
+     */
     public static function generateRandomText(int $length = 10): string {
-        // Define the characters to use for the random text
-        $characters = md5('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
-        // Initialize the random text
+        // Define the characters to use for generating the random string
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        // Ensure the length is within the valid range [10, 300]
+        $length = max(10, min(300, $length));
+        // Initialize the random string
         $random = '';
-        // Ensure the length is within the valid range (10-200)
-        $length = $length < 10 ? 10 : min(200, $length);
-        // Generate the random text
+        // Generate the random string by selecting random characters
+        $charactersLength = strlen($characters);
         for ($i = 0; $i < $length; $i++) {
-            // Select a random character from the defined characters
-            $random .= $characters[rand(0, strlen($characters) - 1)];
+            $random .= $characters[rand(0, $charactersLength - 1)];
         }
         return $random;
     }
+
+
+    /**
+     * Generates a random integer of a specified length.
+     *
+     * This method ensures that the length of the generated integer is between 1 and 50.
+     * If the specified length is greater than 50, it defaults to 50.
+     * If the specified length is less than 1, it defaults to 1.
+     *
+     * @param int $length The desired length of the random integer (default is 10).
+     * @return int A random integer of the specified length.
+     */
+    public static function generateRandomInt(int $length = 10): int {
+        // Clamp the length to the range [1, 50]
+        $length = max(1, min(50, $length));
+        // Calculate the minimum and maximum values for the given length
+        $min = (int) pow(10, $length - 1); // Smallest number with the desired length
+        $max = (int) pow(10, $length) - 1; // Largest number with the desired length
+        // Generate and return a random number in the range [$min, $max]
+        return mt_rand($min, $max);
+    }
+
 
     /**
      * Initiates the download of a file and optionally deletes it after download.
@@ -2170,27 +2202,46 @@ class Utils {
     }
 
     /**
-     * Convert image to base64
-     * @param string $file
-     * @return string
+     * Converts an image file to a Base64-encoded Data URI.
+     *
+     * @param string $file The path to the image file.
+     * @return string A Base64 Data URI string, or an empty string if the file is invalid or unsupported.
      */
-    public static function convertImageToBase64(string $file): string {
+    public static function convertImageToBase64Uri(string $file): string {
         $base64Image = "";
-        // Supported image extensions
-        $extensions = array('gif', 'jpg', 'jpeg', 'png', 'webp');
         // Check if the file exists and is readable
         if (File::isFile($file) && self::isReadable($file)) {
-            // Get the file extension
+            // Extract the file's extension and convert it to lowercase
             $extension = strtolower(File::getExtension($file));
-            // Check if the file extension is supported
-            if (self::isNotEmptyString($extension) && self::inArray($extension, $extensions)) {
-                // Get the image content and encode the image content to base64
-                $base64Encode = base64_encode(@\file_get_contents($file));
-                // Add the appropriate data URI prefix
+            // Check if the file  extension is provided
+            if (self::isNotEmptyString($extension)) {
+                // Read the file content and encode it in Base64
+                $base64Encode = base64_encode(@file_get_contents($file));
+                // Construct the Base64 Data URI with MIME type
                 $base64Image = 'data:' . mime_content_type($file) . ';base64,' . $base64Encode;
             }
         }
+        // Return the Base64 Data URI or an empty string if conversion failed
         return $base64Image;
+    }
+
+    /**
+     * Converts a Base64-encoded Data URI back into binary data.
+     *
+     * @param string $base64Uri The Base64 Data URI string.
+     * @return string The binary data extracted from the Base64 string.
+     *
+     * This method removes the "data:mime_type;base64," prefix using regex,
+     * decodes the remaining Base64 string, and returns the binary data.
+     */
+    public static function convertImageBase64UriToBin(string $base64Uri): string {
+        // Step 1: Remove the "data:mime_type;base64," prefix using regex
+        // ^data:          - Matches the start of the string and "data:"
+        // [a-zA-Z0-9\/\+\-\.]+ - Matches any valid MIME type (letters, digits, /, +, -, .)
+        // ;base64,        - Matches the literal ";base64,"
+        $base64String = preg_replace('/^data:[a-zA-Z0-9\/\+\-\.]+;base64,/', '', $base64Uri);
+        // Step 2: Decode the Base64 string into binary and return it
+        return base64_decode($base64String);
     }
 
     /**
@@ -3340,99 +3391,220 @@ class Utils {
     }
 
     /**
-     * Converts a GD image resource into a binary string.
+     * Converts image binary data to a GdImage resource.
      *
-     * @param \GdImage $imageResource GD image resource to be converted.
-     * @param string $resourceFormat Format to output the binary (e.g., "png", "jpeg"). Defaults to "png".
-     * @return string Binary representation of the image.
+     * @param string $binary The binary data of the image.
+     *
+     * @return \GdImage|null The GdImage resource on success, or null on failure.
      */
-    public static function convertImageResourceIntoBinary(\GdImage $imageResource, string $resourceFormat = "png"): string {
-        $binary = "";
-        $supportedFormats = ["png", "jpeg", "jpg", "gif", "webp"];
-        if (in_array($resourceFormat, $supportedFormats)) {
-            // Start output buffering
+    public static function convertBinaryImageToImageResource(string $binary): ?\GdImage {
+        // Check if the binary data is not empty
+        if (empty($binary)) {
+            return null;
+        }
+        // Create an image resource from the binary data
+        $image = @imagecreatefromstring($binary);
+        // Check if the creation was successful
+        if ($image === false) {
+            return null;
+        }
+        return $image;
+    }
+
+    /**
+     * Converts a GdImage resource into binary data in a specified format.
+     *
+     * @param \GdImage $resource The GdImage resource to convert.
+     * @param string $format The desired output format ('png', 'jpeg', 'jpg', 'gif', 'webp').
+     * @param int $quality The quality for the output image (0-100, only applicable for JPEG and WEBP).
+     *
+     * @return string|null The binary data of the image on success, or null on failure.
+     */
+    public static function convertImageResourceToImageBinary(\GdImage $resource, string $format = "png", int $quality = 90): ?string {
+        // Initialize the binary output to null
+        $binary = null;
+        // Validate that the provided format is supported
+        if (in_array(strtolower($format), ["png", "jpeg", "jpg", "gif", "webp"])) {
+            // Start output buffering to capture the image data
             ob_start();
-            // Output the image to the buffer based on the specified format
-            switch (strtolower($resourceFormat)) {
+            // Variable to track the success of the image generation
+            $success = false;
+            // Determine the correct image creation function based on the format
+            switch (strtolower($format)) {
                 case 'png':
-                    imagepng($imageResource);
+                    // Create PNG image
+                    $success = imagepng($resource, null);
                     break;
                 case 'jpg':
                 case 'jpeg':
-                    imagejpeg($imageResource);
+                    // Create JPEG image with quality
+                    $success = imagejpeg($resource, null, $quality);
                     break;
                 case 'gif':
-                    imagegif($imageResource);
+                    // Create GIF image
+                    $success = imagegif($resource);
+                    break;
+                case 'webp':
+                    // Create WEBP image if the function exists
+                    if (function_exists('imagewebp')) {
+                        $success = imagewebp($resource, null, $quality);
+                    }
                     break;
                 default:
-                    imagewebp($imageResource);
-                    break;
+                    // Unsupported format; clear the output buffer
+                    ob_end_clean();
+                    return null;
             }
-            // Retrieve the content of the buffer
-            $binary = ob_get_contents();
-            // Clean and close the buffer
-            ob_end_clean();
-            // Free up memory
-            imagedestroy($imageResource);
+            // Check if image creation was successful
+            if ($success) {
+                // Retrieve the binary data from the output buffer
+                $binary = ob_get_clean();
+            } else {
+                // If unsuccessful, clear the output buffer
+                ob_end_clean();
+            }
         }
+        // Return the generated binary data or null if unsuccessful
         return $binary;
     }
 
     /**
-     * Converts a GD image resource into a binary image with a logo overlaid.
+     * Creates an image resource from an image file.
      *
-     * @param \GdImage $imageResource GD image resource to be processed.
-     * @param string $logoFilename Path to the logo file.
-     * @return string|null Binary representation of the resulting image, or null if logo file is invalid.
+     * This method supports multiple image formats (PNG, JPEG, GIF, WebP) and ensures
+     * the file exists and is readable before attempting to create the resource.
+     *
+     * @param string $filename The path to the image file.
+     *
+     * @return resource|null Returns the image resource on success or null on failure.
      */
-    public static function logoIntoImageFromImageResource(\GdImage $imageResource, string $logoFilename): ?string {
-        return self::convertImageResourceIntoBinary($imageResource, $logoFilename);
+    public static function createImageResourceFromImageFile(string $filename): ?\GdImage {
+        $resource = null; // Initialize the image resource to null.
+        // Check if the file exists and is readable using custom utility functions.
+        if (File::isFile($filename) && Utils::isReadable($filename)) {
+            // Get the file extension in lowercase for case-insensitive comparison.
+            $extension = strtolower(File::getExtension($filename));
+            // Determine the image type based on its file extension and create the corresponding resource.
+            switch ($extension) {
+                case 'png':
+                    $resource = imagecreatefrompng($filename);
+                    break;
+                case 'jpg':
+                case 'jpeg':
+                    $resource = imagecreatefromjpeg($filename);
+                    break;
+                case 'gif':
+                    $resource = imagecreatefromgif($filename);
+                    break;
+                case 'webp':
+                    $resource = imagecreatefromwebp($filename);
+                    break;
+                default:
+                    $resource = null; // Unsupported file type.
+                    break;
+            }
+        }
+        // Return the created resource or null if creation failed.
+        return $resource;
     }
 
     /**
-     * Overlays a logo onto an image represented as binary data.
+     * Converts image binary data into a Data URI.
      *
-     * @param string $imageBinary Binary representation of the base image.
-     * @param string $logoFilename Path to the logo file (PNG format expected).
-     * @return string|null Binary representation of the resulting image, or null if the logo file is invalid.
+     * @param string $binary The binary data of the image.
+     * @param string $mimeType The MIME type of the image (e.g., "image/png", "image/jpeg").
+     *
+     * @return string|null The Data URI of the image, or null if the input is invalid.
      */
-    public static function logoIntoImageFromImageBinary(string $imageBinary, string $logoFilename): ?string {
-        if (File::isFile($logoFilename)) {
-            // Create image resources from binary data and logo file
-            $source = imagecreatefromstring($imageBinary);
-            $sw = imagesx($source);
-            $sh = imagesy($source);
-            $logo = imagecreatefromstring(File::getFileContent($logoFilename));
-            $lw = imagesx($logo);
-            $lh = imagesy($logo);
-            // Limit logo size to 12% of the base image's dimensions
-            $lmw = $sw * 0.12; // logo max width
-            $lmh = $sh * 0.12; // logo max height
-            // Calculate resized dimensions while maintaining aspect ratio
+    public static function convertImageBinaryToDataUri(string $binary, string $mimeType): ?string {
+        // Validate the input binary and MIME type
+        if (empty($binary) || empty($mimeType)) {
+            return null; // Return null if either the binary or MIME type is invalid
+        }
+        // Encode the binary data to Base64
+        $base64Data = base64_encode($binary);
+        // Construct the Data URI using the MIME type and Base64-encoded data
+        $dataUri = "data:" . $mimeType . ";base64," . $base64Data;
+        return $dataUri;
+    }
+
+    /**
+     * Add a logo into an image from a GdImage resource and returns the modified image as binary data.
+     *
+     * @param \GdImage $resource The base image resource.
+     * @param string $logo The file path to the logo image.
+     *
+     * @return string|null The modified image with the logo embedded as binary data, or null on failure.
+     */
+    public static function addLogoIntoImageFromImageResource(\GdImage $resource, string $logo): ?string {
+        // Convert the GdImage resource to binary and insert the logo
+        return self::addLogoIntoImageFromImageBinary(self::convertImageResourceToImageBinary($resource, "png"), $logo);
+    }
+
+    /**
+     * Add a logo into an image represented as binary data.
+     *
+     * @param string $binary The binary data of the base image.
+     * @param string $filename The file path to the logo image.
+     *
+     * @return string|null The modified image with the logo embedded as binary data, or null on failure.
+     */
+    public static function addLogoIntoImageFromImageBinary(string $binary, string $filename): ?string {
+        // Check if the logo file exists
+        if (File::isFile($filename)) {
+            // Create image resources from the binary data of the base image and the logo file
+            $source = imagecreatefromstring($binary);
+            $sw = imagesx($source); // Base image width
+            $sh = imagesy($source); // Base image height
+            $logo = imagecreatefromstring(File::getFileContent($filename));
+            $lw = imagesx($logo); // Logo width
+            $lh = imagesy($logo); // Logo height
+            // Limit the logo size to 12% of the base image's dimensions
+            $lmw = $sw * 0.12; // Maximum logo width
+            $lmh = $sh * 0.12; // Maximum logo height
+            // Calculate the scaling factor to maintain the logo's aspect ratio
             $scale = ($lw > $lmw || $lh > $lmh) ? min($lmw / $lw, $lmh / $lh) : 1;
-            $nlw = (int)($lw * $scale);
-            $nlh = (int)($lh * $scale);
+            $nlw = (int)($lw * $scale); // New logo width
+            $nlh = (int)($lh * $scale); // New logo height
             // Create a resized version of the logo
             $resizedLogo = imagecreatetruecolor($nlw, $nlh);
-            imagesavealpha($resizedLogo, true);
-            $transparent = imagecolorallocatealpha($resizedLogo, 255, 255, 255, 127);
+            imagesavealpha($resizedLogo, true); // Preserve alpha transparency
+            $transparent = imagecolorallocatealpha($resizedLogo, 255, 255, 255, 127); // Fully transparent color
             imagefill($resizedLogo, 0, 0, $transparent);
             imagecopyresampled($resizedLogo, $logo, 0, 0, 0, 0, $nlw, $nlh, $lw, $lh);
             // Center the resized logo on the base image
-            $x = ($sw - $nlw) / 2;
-            $y = ($sh - $nlh) / 2;
+            $x = ($sw - $nlw) / 2; // Center x-coordinate
+            $y = ($sh - $nlh) / 2; // Center y-coordinate
             imagecopy($source, $resizedLogo, $x, $y, 0, 0, $nlw, $nlh);
-            // Convert the resulting image back to binary
-            $result = self::convertImageResourceIntoBinary($source);
-            // Clean up resources
+            // Convert the resulting image back to binary data
+            $result = self::convertImageResourceToImageBinary($source);
+            // Clean up resources to free memory
             imagedestroy($source);
             imagedestroy($logo);
             imagedestroy($resizedLogo);
             return $result;
         }
+        // Return null if the logo file does not exist
         return null;
     }
 
+    /**
+     * Get the parent directory of a given directory.
+     *
+     * @param string $dir The absolute path of the directory.
+     * @return string|false The parent directory path or false if resolution fails.
+     */
+    public static function goUpDirectory(string $dirname) {
+        // Resolve to an absolute path
+        $resolvedDir = realpath($dirname);
+        if (is_string($resolvedDir)) {
+            // Get the parent directory
+            $parentDir = dirname($resolvedDir);
+            return $parentDir;
+        }
+        // If realpath fails, return false
+        return false;
+    }
 
     // PRIVATE METHODS
 
