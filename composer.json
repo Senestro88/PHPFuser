@@ -3,8 +3,9 @@
   "description": "An almost complete php web fuse",
   "type": "library",
   "license": "MIT",
-  "minimum-stability": "stable",
-  "version": "10.6",
+  "minimum-stability": "beta",
+  "prefer-stable": true,
+  "version": "10.8",
   "keywords": [
     "phpfuser"
   ],
@@ -16,7 +17,6 @@
   "support": {
     "email": "Senestro88@gmail.com"
   },
-  "prefer-stable": true,
   "autoload": {
     "files": [
       "autoload.php"

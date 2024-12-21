@@ -75,12 +75,12 @@ class QrCode {
      * @param int $scale The scaling factor for the QR code (default: 10).
      * @param int $spacing The spacing around the logo (default: 6).
      * @param string $ecl The error correction level: "L", "M", "Q", or "H" (default: "H").
-     * @param array $color The RGB color for QR code modules (default: [22, 39, 130]).
+     * @param array $color The RGB color for QR code modules (default: array(22, 39, 130)).
      * @param bool $asDataUri Whether to return the QR code as a Data URI (default: true).
      *
      * @return string The generated QR code as a binary string or Data URI.
      */
-    public static function generate(string $data, ?string $logo = null, int $scale = 10, int $spacing = 6, string $ecl = "H", array $color = [22, 39, 130], bool $asDataUri = true): string {
+    public static function generate(string $data, ?string $logo = null, int $scale = 10, int $spacing = 6, string $ecl = "H", array $color = array(22, 39, 130), bool $asDataUri = true): string {
         try {
             // Initialize the result variable
             $result = "";
