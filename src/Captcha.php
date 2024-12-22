@@ -303,27 +303,14 @@ class Captcha {
         // Check if the image is valid, colors array is not empty, and noise level is set and greater than 0
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && isset($options['noiseLevel']) && $options['noiseLevel'] > 0) {
             // Limit noise level to a maximum of 10 and adjust by logarithm base 2 of e
-            $noiseLevel = min($options['noiseLevel'], 10) * M_LOG2E;
+            $noiseLevel = Captcha::calculateNoiseLevel($options['noiseLevel']);
             // Extract width and height from options
             $width = $options['width'];
             $height = $options['height'];
-            // Loop through the image in steps of 10 pixels
-            for ($x = 1; $x < $width; $x += 10) {
-                for ($y = 1; $y < $height; $y += 10) {
-                    // Generate noise within the current 10x10 grid
-                    for ($i = 0; $i < $noiseLevel; ++$i) {
-                        // Randomly generate x and y coordinates within the grid
-                        $x1 = round(mt_rand($x, $x + 10));
-                        $y1 = round(mt_rand($y, $y + 10));
-                        // Randomly generate size of the noise spot
-                        $size = mt_rand(1, 3);
-                        // Ensure the noise spot does not cover the top-left corner (0, 0)
-                        if ($x1 - $size <= 0 && $y1 - $size <= 0) {
-                            continue;
-                        }
-                        // Draw a filled arc at the generated coordinates
-                        imagefilledarc($image, $x1, $y1, $size, $size, 0, mt_rand(180, 360), $colors['noise'], IMG_ARC_PIE);
-                    }
+            // Generate noise
+            for ($x = 0; $x < $width; $x += 10) {
+                for ($y = 0; $y < $height; $y += 10) {
+                    Captcha::generateNoiseInGrid($image, $x, $y, $noiseLevel, $colors['noise']);
                 }
             }
         }
@@ -338,51 +325,14 @@ class Captcha {
      */
     private static function drawLines(\GdImage &$image, array $options = array(), array $colors = array()): void {
         // Check if the image is valid, colors array is not empty, and numLines is set and greater than 0
-        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && isset($options['numLines']) && $options['numLines'] > 0) {
+        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && isset($options['numLines']) && $options['numLines'] > 0 && isset($colors['lines'])) {
             // Extract width, height, and number of lines from options
             $width = $options['width'];
             $height = $options['height'];
             $numLines = $options['numLines'];
-            // Loop to draw the specified number of lines
             for ($line = 0; $line < $numLines; ++$line) {
-                // Calculate x-coordinate of the line start point
-                $x = ($width * (1 + $line)) / ($numLines + 1);
-                $x += ((0.5 - self::rand()) * ($width / $numLines));
-                $x = round($x, 2);
-                // Randomly generate y-coordinate within 10% to 90% of height
-                $y = mt_rand(($height * 0.1), ($height * 0.9));
-                // Randomly generate the angle of the line in radians
-                $theta = round(((self::rand() - 0.5) * M_PI) * 0.33, 2);
-                // Randomly generate the length of the line
-                $len = mt_rand(($width * 0.4), ($width * 0.7));
-                // Randomly decide the line width
-                $lwid = !mt_rand(0, 2);
-                // Calculate the frequency of the wave
-                $k = round((self::rand() * 0.6) + 0.2, 2);
-                $k = round(($k * $k) * 0.5, 2);
-                // Randomly generate the phase shift
-                $phi = round(self::rand() * 6.28, 2);
-                // Set the step size for drawing
-                $step = 0.5;
-                // Calculate the change in x and y per step
-                $dx = round($step * cos($theta), 2);
-                $dy = round($step * sin($theta), 2);
-                // Calculate the number of steps
-                $n = ($len / $step);
-                // Calculate the amplitude of the wave
-                $amp = round((1.5 * self::rand()) / ($k + 5.0 / $len), 2);
-                // Calculate the starting point of the line
-                $x0 = round($x - 0.5 * $len * cos($theta), 2);
-                $y0 = round($y - 0.5 * $len * sin($theta), 2);
-                // Calculate the offset for the line width
-                $ldx = round(-$dy * $lwid);
-                $ldy = round($dx * $lwid);
-                // Loop to draw the line step by step
-                for ($i = 0; $i < $n; ++$i) {
-                    $x = round($x0 + $i * $dx + $amp * $dy * sin($k * $i * $step + $phi), 2);
-                    $y = round($y0 + $i * $dy - $amp * $dx * sin($k * $i * $step + $phi), 2);
-                    imagefilledrectangle($image, $x, $y, $x + $lwid, $y + $lwid, $colors['lines']);
-                }
+                $lineParams = Captcha::generateLineParams($width, $height, $numLines, $line);
+                Captcha::drawSingleLine($image, $lineParams, $colors['lines']);
             }
         }
     }
@@ -417,16 +367,21 @@ class Captcha {
     }
 
     /**
-     * Draw the captcha text on the captcha image
-     * @param \GdImage $image Reference to the image
-     * @param array $options The captcha options
-     * @param array $colors The captcha colors for creating the captcha
-     * @param array $directories The private directories
-     * @param string $generatedText The generated text to draw on the captcha image
-     * @return void
+     * Draw the generated CAPTCHA text on the image.
+     *
+     * This function renders the CAPTCHA text with various configurable options such as font size, angles, and random spaces.
+     * The text is drawn on the image using TrueType font (captcha.ttf) and adjusted based on the given parameters.
+     *
+     * @param \GdImage &$image The GD image resource to draw the text on.
+     * @param array $options Various options for drawing the CAPTCHA text (e.g., font ratio, random spaces).
+     * @param array $colors Array containing color values for text and other elements.
+     * @param array $directories Array containing paths to directories such as fonts.
+     * @param string $generatedText The CAPTCHA text to be drawn on the image.
+     *
+     * @return void This function does not return any value.
      */
     private static function drawCaptchaText(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array(), string $generatedText = ""): void {
-        // Check if the image is valid, colors array is not empty, directories array is not empty, and generated text is not empty
+        // Ensure that the image, colors array, directories array, and generated text are valid
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($generatedText)) {
             // Define the path to the font file
             $font = $directories['fonts'] . "captcha.ttf";
@@ -474,7 +429,7 @@ class Captcha {
                     $step = (abs($angle0 - $angleN) / (self::strlen($generatedText) - 1));
                     $step = ($angle0 > $angleN) ? -$step : $step;
                     $angle = $angle0;
-                    // Loop through each character in the generated text
+                    // Loop through each character in the generated text to calculate its properties
                     for ($index = 0; $index < self::strlen($generatedText); ++$index) {
                         $fonts[] = $font;
                         $angles[] = $angle;
@@ -519,6 +474,7 @@ class Captcha {
                     } else {
                         $y = ($height / 2 + $dims[0][1] / 2 - $dims[0][2]);
                     }
+                    // Randomly scale the text if the option is enabled
                     $randScale = ($scale * mt_rand(5, 10));
                     // Loop through each character in the generated text to draw it on the image
                     for ($i = 0; $i < self::strlen($generatedText); ++$i) {
@@ -755,5 +711,159 @@ class Captcha {
      */
     private static function rand(): float {
         return (0.0001 * mt_rand(0, 9999));
+    }
+
+    /**
+     * Calculate the adjusted noise level based on the input level.
+     *
+     * This function ensures that the noise level is capped at a maximum value of 10
+     * and then scales it using the natural logarithm of 2 (M_LOG2E).
+     *
+     * @param float $noiseLevel The raw noise level to be adjusted.
+     *
+     * @return float The adjusted noise level.
+     */
+    private static function calculateNoiseLevel(float $noiseLevel): float {
+        // Limit the noise level to a maximum of 10, then scale it using M_LOG2E
+        return min($noiseLevel, 10) * M_LOG2E;
+    }
+
+    /**
+     * Generate noise within a 10x10 grid on the provided GD image.
+     *
+     * This function creates random noise spots within a 10x10 pixel grid on the image,
+     * using the specified noise level to control the number of spots and the color for drawing.
+     * The noise spots are small arcs or circles of random sizes and positions.
+     *
+     * @param \GdImage $image The GD image resource to draw noise on.
+     * @param int $x The top-left x-coordinate of the grid.
+     * @param int $y The top-left y-coordinate of the grid.
+     * @param float $noiseLevel The level of noise, which determines the number of spots.
+     * @param int $noiseColor The color to use for the noise, represented as an integer.
+     *
+     * @return void This function does not return a value.
+     */
+    private static function generateNoiseInGrid(\GdImage &$image, int $x, int $y, float $noiseLevel, $noiseColor): void {
+        // Loop based on the noise level to create multiple noise spots
+        for ($i = 0; $i < $noiseLevel; ++$i) {
+            // Randomly generate coordinates within the 10x10 grid
+            $x1 = mt_rand($x, $x + 9);
+            $y1 = mt_rand($y, $y + 9);
+            // Randomly determine the size of the noise spot (1 to 3 pixels)
+            $size = mt_rand(1, 3);
+            // Skip the top-left corner to avoid covering the origin (0, 0)
+            if ($x1 - $size <= 0 && $y1 - $size <= 0) {
+                continue;
+            } else {
+                // Draw the noise spot as an arc or circle
+                imagefilledarc($image, $x1, $y1, $size, $size, 0, mt_rand(180, 360), $noiseColor, IMG_ARC_PIE);
+            }
+        }
+    }
+
+    /**
+     * Generate parameters for a single line to be drawn on an image.
+     *
+     * This method calculates and returns an array of parameters that define the properties
+     * of a single line, such as its starting position, direction, amplitude, and wave characteristics.
+     *
+     * @param int $width The width of the canvas or image.
+     * @param int $height The height of the canvas or image.
+     * @param int $numLines The total number of lines to be generated on the image.
+     * @param int $line The current line number (0-based index).
+     *
+     * @return array An associative array containing the following keys:
+     *   - 'x0' (float): The starting x-coordinate of the line.
+     *   - 'y0' (float): The starting y-coordinate of the line.
+     *   - 'dx' (float): The horizontal increment for each point.
+     *   - 'dy' (float): The vertical increment for each point.
+     *   - 'amp' (float): The amplitude of the sine wave transformation.
+     *   - 'k' (float): The wave number controlling the sine wave frequency.
+     *   - 'phi' (float): The phase shift of the sine wave.
+     *   - 'n' (float): The total number of points for the line, based on its length.
+     *   - 'ldx' (float): The horizontal adjustment for the line width.
+     *   - 'ldy' (float): The vertical adjustment for the line width.
+     *   - 'lwid' (int): The line width (1 or 0).
+     */
+    private static function generateLineParams(int $width, int $height, int $numLines, int $line): array {
+        // Calculate the x-coordinate of the line's center based on its position and randomness
+        $x = ($width * (1 + $line)) / ($numLines + 1);
+        $x += ((0.5 - self::rand()) * ($width / $numLines));
+        $x = round($x, 2);
+        // Randomly determine the y-coordinate within a vertical range of the canvas
+        $y = mt_rand(($height * 0.1), ($height * 0.9));
+        // Randomly determine the angle (theta) of the line
+        $theta = round(((self::rand() - 0.5) * M_PI) * 0.33, 2);
+        // Randomly determine the length of the line
+        $len = mt_rand(($width * 0.4), ($width * 0.7));
+        // Determine the line width; 1 for thicker lines, 0 for thinner
+        $lwid = !mt_rand(0, 2) ? 1 : 0;
+        // Calculate the wave number (k) for sine wave transformations
+        $k = round((self::rand() * 0.6) + 0.2, 2);
+        $k = round(($k * $k) * 0.5, 2);
+        // Determine the phase shift (phi) of the sine wave
+        $phi = round(self::rand() * 6.28, 2);
+        // Set the step size for line increments
+        $step = 0.5;
+        // Calculate the horizontal and vertical increments based on the angle
+        $dx = round($step * cos($theta), 2);
+        $dy = round($step * sin($theta), 2);
+        // Calculate the number of points in the line based on its length and step size
+        $n = $len / $step;
+        // Calculate the amplitude of the sine wave
+        $amp = round((1.5 * self::rand()) / ($k + 5.0 / $len), 2);
+        // Calculate the starting x and y coordinates of the line
+        $x0 = round($x - 0.5 * $len * cos($theta), 2);
+        $y0 = round($y - 0.5 * $len * sin($theta), 2);
+        // Adjust the line width based on the increments
+        $ldx = round(-$dy * $lwid);
+        $ldy = round($dx * $lwid);
+        // Return all calculated parameters as an associative array
+        return compact('x0', 'y0', 'dx', 'dy', 'amp', 'k', 'phi', 'n', 'ldx', 'ldy', 'lwid');
+    }
+
+
+    /**
+     * Draw a single line on the image using sine wave transformations.
+     *
+     * This method creates a line on the provided GD image resource by iterating over
+     * the specified number of points (`n`) and applying sine wave transformations to 
+     * calculate the position of each point. The line is drawn as small rectangles
+     * (pixels or blocks) with the specified line width (`lwid`) and color (`lineColor`).
+     *
+     * @param \GdImage $image The GD image resource to draw on.
+     * @param array $params An associative array containing the following keys:
+     *   - 'n' (int): The number of points to iterate for drawing the line.
+     *   - 'x0' (float): The starting x-coordinate of the line.
+     *   - 'y0' (float): The starting y-coordinate of the line.
+     *   - 'dx' (float): The horizontal increment for each point.
+     *   - 'dy' (float): The vertical increment for each point.
+     *   - 'amp' (float): The amplitude of the sine wave transformation.
+     *   - 'k' (float): The wave number that controls the frequency of the sine wave.
+     *   - 'phi' (float): The phase shift of the sine wave.
+     *   - 'lwid' (int): The line width or size of the rectangles to draw for each point.
+     * @param int $lineColor The color to use for the line, represented as an integer.
+     *
+     * @return void This function does not return a value.
+     */
+    private static function drawSingleLine(\GdImage &$image, array $params, $lineColor): void {
+        // Loop through the number of points defined in $params['n']
+        for ($i = 0; $i < $params['n']; ++$i) {
+            // Calculate the x-coordinate for the current point
+            $x = round(
+                $params['x0'] + $i * $params['dx'] +
+                    $params['amp'] * $params['dy'] * sin($params['k'] * $i * 0.5 + $params['phi']),
+                2
+            );
+            // Calculate the y-coordinate for the current point
+            $y = round(
+                $params['y0'] + $i * $params['dy'] -
+                    $params['amp'] * $params['dx'] * sin($params['k'] * $i * 0.5 + $params['phi']),
+                2
+            );
+            // Draw a filled rectangle at the calculated (x, y) position
+            // The rectangle's size is controlled by $params['lwid']
+            imagefilledrectangle($image, $x, $y, $x + $params['lwid'], $y + $params['lwid'], $lineColor);
+        }
     }
 }
