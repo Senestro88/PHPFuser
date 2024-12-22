@@ -2300,8 +2300,8 @@ class Utils {
         // Check if the file exists and is a valid audio file
         if (File::isFile($file) && Media::ivValidAudioByExtension(File::getExtension($file))) {
             // Check if the GetID3 class exists (it's part of the GetID3 library)
-            if (class_exists("\JamesHeinrich\GetID3\GetID3")) {
-                $getID3 = new \JamesHeinrich\GetID3\GetID3(); // Create a new instance of GetID3
+            if (class_exists("\getID3")) {
+                $getID3 = new \getID3();
                 // Analyze the file to retrieve metadata
                 $analyze = @$getID3->analyze(self::resolvePath($file));
                 // If the analysis is successful and playtime information is available
@@ -2329,8 +2329,8 @@ class Utils {
         // Check if the file exists and is a valid video file
         if (File::isFile($file) && Media::ivValidVideoByFilename($file)) {
             // Check if the GetID3 class exists (it's part of the GetID3 library)
-            if (class_exists("\JamesHeinrich\GetID3\GetID3")) {
-                $getID3 = new \JamesHeinrich\GetID3\GetID3(); // Create a new instance of GetID3
+            if (class_exists("\getID3")) {
+                $getID3 = new \getID3();
                 // Analyze the file to retrieve metadata
                 $analyze = @$getID3->analyze(self::resolvePath($file));
                 // If the analysis is successful and playtime information is available
@@ -2354,10 +2354,10 @@ class Utils {
         if ((File::isFile($audioName) && Media::ivValidAudioByFilename($audioName)) && File::isFile($coverName)) {
             $audioName = self::resolvePath($audioName);
             $coverName = self::resolvePath($coverName);
-            $classesExists = class_exists("\JamesHeinrich\GetID3\GetID3") && class_exists("\JamesHeinrich\GetID3\WriteTags");
+            $classesExists = class_exists("\getID3") && class_exists("\getid3_writetags");
             if (self::isTrue($classesExists) && self::isNotEmptyArray($options)) {
-                $getID3 = new \JamesHeinrich\GetID3\GetID3();
-                $writer = new \JamesHeinrich\GetID3\WriteTags();
+                $getID3 = new \getID3();
+                $writer = new \getid3_writetags();
                 $encoding = 'UTF-8';
                 $getID3->setOption(array('encoding' => $encoding));
                 $writer->filename = $audioName;
