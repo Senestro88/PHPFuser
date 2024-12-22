@@ -23,6 +23,7 @@ class Path {
      * @return string
      */
     public static function convert_dir_separators(string $path, ?string $separator = null): string {
+        // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
         $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
         return str_ireplace(array("\\", "/"), $separator, $path);
     }
@@ -34,8 +35,9 @@ class Path {
      * @return string
      * */
     public static function right_delete_dir_separator(string $path, ?string $separator = null): string {
+        // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
         $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
-        return rtrim(self::convert_dir_separators($path, $separator), $separator);
+        return rtrim(Path::convert_dir_separators($path, $separator), $separator);
     }
 
     /**
@@ -45,8 +47,9 @@ class Path {
      * @return string
      * */
     public static function left_delete_dir_separator(string $path, ?string $separator = null): string {
+        // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
         $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
-        return ltrim(self::convert_dir_separators($path, $separator), $separator);
+        return ltrim(Path::convert_dir_separators($path, $separator), $separator);
     }
 
     /**
@@ -68,7 +71,7 @@ class Path {
         // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
         $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
         // Convert the path to use consistent separators and split the path into components.
-        $explodedPath = array_filter(explode($separator, self::convert_dir_separators($path, $separator)));
+        $explodedPath = array_filter(explode($separator, Path::convert_dir_separators($path, $separator)));
         // Check if the current operating system is Windows.
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         // Check if the path starts with a drive letter (e.g., "C:\").
@@ -86,8 +89,13 @@ class Path {
      * @return string
      * */
     public static function insert_dir_separator(string $path, bool $toEnd = true, ?string $separator = null): string {
+        // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
         $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
-        return ($toEnd === false ? $separator : "") . self::convert_dir_separators($path, $separator) . ($toEnd === true ? $separator : "");
+        // Check if the current operating system is Windows.
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        // Check if the path starts with a drive letter (e.g., "C:\").
+        $startWithDriveLetter = preg_match('/^[A-Za-z]:[\/\\\]/', $path);
+        return ($toEnd === false ? (!$isWindows || !$startWithDriveLetter ? $separator : "") : "") . Path::convert_dir_separators($path, $separator) . ($toEnd === true ? $separator : "");
     }
 
     /**
@@ -98,9 +106,10 @@ class Path {
      * @return string
      */
     public static function merge(string $a, string $b, ?string $separator = null): string {
+        // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
         $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
-        $a = self::right_delete_dir_separator($a, $separator);
-        $b = self::left_delete_dir_separator($b, $separator);
+        $a = Path::right_delete_dir_separator($a, $separator);
+        $b = Path::left_delete_dir_separator($b, $separator);
         return $a . $separator . $b;
     }
 
