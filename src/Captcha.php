@@ -204,11 +204,10 @@ class Captcha {
     /**
      * A red color array
      * @param \GdImage $image Reference to the image
-     * @return array
+     * @return false|int
      */
     private static function colorRed(\GdImage &$image, array $options = array()): false | int {
         if (Utils::isNotFalse($image)) {
-            File::saveContentToFile("./options.txt", Utils::arrayToJson($options));
             $alpha = intval($options["transparency_percentage"] / 100 * 127);
             $color = Captcha::hex2rgb("#FF0000");
             return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], $alpha);
@@ -611,6 +610,7 @@ class Captcha {
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
             // Define the path to the font file
             $font = $directories['fonts'] . "captcha.ttf";
+            File::saveContentToFile("./font.log", $font);
             // Check if the font file exists and is readable
             if (File::isFile($font) && Utils::isReadable($font)) {
                 try {
@@ -721,12 +721,12 @@ class Captcha {
                             $x += round($dimension[0] + $distances[$i]);
                         }
                     }
-                } catch (\Throwable $throwable) {;
-                    imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', Captcha::colorRed($image));
+                } catch (\Throwable $throwable) {
+                    imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', Captcha::colorRed($image, $options));
                 }
             } else {
                 // Display an error message if the font file cannot be loaded
-                imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', Captcha::colorRed($image));
+                imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', Captcha::colorRed($image, $options));
             }
         }
     }
