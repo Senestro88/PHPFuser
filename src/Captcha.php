@@ -208,6 +208,7 @@ class Captcha {
      */
     private static function colorRed(\GdImage &$image, array $options = array()): false | int {
         if (Utils::isNotFalse($image)) {
+            File::saveContentToFile("./options.txt", Utils::arrayToJson($options));
             $alpha = intval($options["transparency_percentage"] / 100 * 127);
             $color = Captcha::hex2rgb("#FF0000");
             return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], $alpha);
