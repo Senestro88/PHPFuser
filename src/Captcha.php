@@ -863,7 +863,7 @@ class Captcha {
             );
             // Draw a filled rectangle at the calculated (x, y) position
             // The rectangle's size is controlled by $params['lwid']
-            imagefilledrectangle($image, $x, $y, $x + $params['lwid'], $y + $params['lwid'], $lineColor);
+            imagefilledrectangle($image, $x, $y, round($x + $params['lwid']), round($y + $params['lwid']), $lineColor);
         }
     }
 }
