@@ -208,8 +208,9 @@ class Captcha {
      */
     private static function colorRed(\GdImage &$image, array $options = array()): false | int {
         if (Utils::isNotFalse($image)) {
+            $alpha = intval($options['transparency_percentage'] / 100 * 127);
             $color = Captcha::hex2rgb("#FF0000");
-            return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], 1);
+            return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], $alpha);
         }
         return false;
     }
@@ -605,7 +606,6 @@ class Captcha {
      * @return void This function does not return any value.
      */
     private static function drawCaptchaText(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array(), string $textData = ""): void {
-        $redcolor = Captcha::colorRed($image);
         // Ensure that the image, colors array, directories array, and generated text are valid
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
             // Define the path to the font file
@@ -721,11 +721,11 @@ class Captcha {
                         }
                     }
                 } catch (\Throwable $throwable) {;
-                    imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', $redcolor);
+                    imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', Captcha::colorRed($image));
                 }
             } else {
                 // Display an error message if the font file cannot be loaded
-                imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', $redcolor);
+                imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', Captcha::colorRed($image));
             }
         }
     }
