@@ -610,7 +610,6 @@ class Captcha {
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
             // Define the path to the font file
             $font = $directories['fonts'] . "captcha.ttf";
-            File::saveContentToFile("./font.log", $font);
             // Check if the font file exists and is readable
             if (File::isFile($font) && Utils::isReadable($font)) {
                 try {
@@ -824,10 +823,10 @@ class Captcha {
         $captchaDirname = Path::insert_dir_separator(Path::arrange_dir_separators(PHPFUSER['DIRECTORIES']['DATA'] . DIRECTORY_SEPARATOR . "captcha"));
         File::createDir($captchaDirname);
         $directories = array(
-            "backgrounds" => $captchaDirname . "backgrounds" . DIRECTORY_SEPARATOR,
-            "fonts" => $captchaDirname . "fonts" . DIRECTORY_SEPARATOR,
-            "namespaces" => $captchaDirname . "namespaces" . DIRECTORY_SEPARATOR,
-            "temp" => $captchaDirname . "temp" . DIRECTORY_SEPARATOR
+            "backgrounds" => Path::arrange_dir_separators($captchaDirname . "backgrounds" . DIRECTORY_SEPARATOR, true),
+            "fonts" => Path::arrange_dir_separators($captchaDirname . "fonts" . DIRECTORY_SEPARATOR, true),
+            "namespaces" => Path::arrange_dir_separators($captchaDirname . "namespaces" . DIRECTORY_SEPARATOR, true),
+            "temp" => Path::arrange_dir_separators($captchaDirname . "temp" . DIRECTORY_SEPARATOR, true)
         );
         foreach ($directories as $dirname) {
             File::createDir($dirname);
