@@ -624,6 +624,18 @@ class Captcha {
                     // Set initial and final angles for the text
                     $angle0 = mt_rand(10, 20);
                     $angle1 = round(mt_rand(-20, 10));
+                    // Adjust angles if the option is enabled
+                    if (Utils::isNotFalse($angle0) && Utils::isNotFalse($angle1)) {
+                        if (Utils::isFalse($options['random_angels'])) {
+                            $angle0 = $angle1 = $step = 0;
+                        }
+                        if (mt_rand(0, 99) % 2 == 0) {
+                            $angle0 = -$angle0;
+                        }
+                        if (mt_rand(0, 99) % 2 == 1) {
+                            $angle1 = -$angle1;
+                        }
+                    }
                     // Calculate the step size for angle change
                     $step = (abs($angle0 - $angle1) / (self::strlen($textData) - 1));
                     $step = ($angle0 > $angle1) ? -$step : $step;
@@ -695,7 +707,7 @@ class Captcha {
                         }
                     }
                 } catch (\Throwable $throwable) {
-                    imagestring($image, 10, 10, ($options['height'] / 2) - 5, $throwable->getMessage(), $colors['captcha']);
+                    imagestring($image, 10, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', $colors['captcha']);
                 }
             } else {
                 // Display an error message if the font file cannot be loaded
@@ -796,7 +808,12 @@ class Captcha {
     private static function getDirectories(): array {
         $captchaDirname = Path::insert_dir_separator(Path::arrange_dir_separators(PHPFUSER['DIRECTORIES']['DATA'] . DIRECTORY_SEPARATOR . "captcha"));
         File::createDir($captchaDirname);
-        $directories = array("backgrounds" => $captchaDirname . "backgrounds" . DIRECTORY_SEPARATOR, "fonts" => $captchaDirname . "fonts" . DIRECTORY_SEPARATOR, "namespaces" => $captchaDirname . "namespaces" . DIRECTORY_SEPARATOR, "temp" => $captchaDirname . "temp" . DIRECTORY_SEPARATOR);
+        $directories = array(
+            "backgrounds" => $captchaDirname . "backgrounds" . DIRECTORY_SEPARATOR,
+            "fonts" => $captchaDirname . "fonts" . DIRECTORY_SEPARATOR,
+            "namespaces" => $captchaDirname . "namespaces" . DIRECTORY_SEPARATOR,
+            "temp" => $captchaDirname . "temp" . DIRECTORY_SEPARATOR
+        );
         foreach ($directories as $dirname) {
             File::createDir($dirname);
         }
