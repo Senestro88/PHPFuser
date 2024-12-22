@@ -183,7 +183,7 @@ class Captcha {
      * @param array $options The captcha options
      * @return array
      */
-    private static function allocateColors(\GdImage &$image, array $options = array()): array {
+    private static function colorsAllocate(\GdImage &$image, array $options = array()): array {
         $colors = array();
         if (Utils::isNotFalse($image)) {
             $alpha = intval($options['transparency_percentage'] / 100 * 127);
@@ -206,11 +206,10 @@ class Captcha {
      * @param \GdImage $image Reference to the image
      * @return array
      */
-    private static function redColor(\GdImage &$image, array $options = array()): false | int {
+    private static function colorRed(\GdImage &$image, array $options = array()): false | int {
         if (Utils::isNotFalse($image)) {
-            $alpha = intval($options['transparency_percentage'] / 100 * 127);
             $color = Captcha::hex2rgb("#FF0000");
-            return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], $alpha);
+            return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], 1);
         }
         return false;
     }
@@ -606,7 +605,7 @@ class Captcha {
      * @return void This function does not return any value.
      */
     private static function drawCaptchaText(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array(), string $textData = ""): void {
-        $redcolor = Captcha::redColor($image);
+        $redcolor = Captcha::colorRed($image);
         // Ensure that the image, colors array, directories array, and generated text are valid
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
             // Define the path to the font file
@@ -745,7 +744,7 @@ class Captcha {
         $options = Captcha::validateOptions($options);
         $image = Captcha::createImage($options);
         if (Utils::isNotFalse($image)) {
-            $colors = Captcha::allocateColors($image, $options);
+            $colors = Captcha::colorsAllocate($image, $options);
             Captcha::setBackground($image, $options, $colors, $directories);
             $generatedText = Captcha::createNameSpaceFileAndReturnCaptchaText($options, $directories, $namespace);
             Captcha::drawNoise($image, $options, $colors);
