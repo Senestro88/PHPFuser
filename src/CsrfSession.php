@@ -40,11 +40,11 @@ class CsrfSession {
      * @param mixed $expires The time to mark the token as expired  (In minutes)
      */
     public static function setToken(int $expires = 1440): void {
-        if (self::sessionIdValid()) {
+        if (self::validSessionID()) {
             $generatedToken = self::generateToken($expires);
             if (!empty($generatedToken)) {
                 // Set the token in the session
-                $_SESSION[self::$name] = base64_encode($generatedToken);
+                $_SESSION[self::$name] = bin2hex($generatedToken);
                 if (!isset($_SESSION[self::$name])) {
                     self::$errorMessage = "Failed to set the token session.";
                 }
@@ -61,7 +61,7 @@ class CsrfSession {
      * @return string|null
      */
     public static function getToken(): ?string {
-        return self::sessionIdValid() && isset($_SESSION[self::$name]) && is_string($_SESSION[self::$name]) && !empty($_SESSION[self::$name]) ? $_SESSION[self::$name] : null;
+        return self::validSessionID() && isset($_SESSION) && isset($_SESSION[self::$name]) && is_string($_SESSION[self::$name]) && Utils::isNotEmptyString($_SESSION[self::$name]) ? $_SESSION[self::$name] : null;
     }
 
     /**
@@ -69,10 +69,10 @@ class CsrfSession {
      * @return bool
      */
     public static function validateToken(): bool {
-        if (self::sessionIdValid()) {
+        if (self::validSessionID()) {
             $sessionToken = self::getToken();
             if (!self::isNull($sessionToken)) {
-                $isValid = Csrf::validateToken(self::$csrfKey, base64_decode($sessionToken));
+                $isValid = Csrf::validateToken(self::$csrfKey, hex2bin($sessionToken));
                 if ($isValid) {
                     self::unsetToken();
                 } else {
@@ -95,7 +95,7 @@ class CsrfSession {
      */
     public static function isValidToken(string $generatedToken): bool {
         if (!empty($generatedToken)) {
-            $isValid = Csrf::validateToken(self::$csrfKey, base64_decode($generatedToken));
+            $isValid = Csrf::validateToken(self::$csrfKey, hex2bin($generatedToken));
             if ($isValid) {
                 self::unsetToken();
             } else {
@@ -112,7 +112,7 @@ class CsrfSession {
      * Echo the CSRF token in a form
      */
     public static function echoTokenInForm(): void {
-        if (self::sessionIdValid()) {
+        if (self::validSessionID()) {
             $sessionToken = self::getToken();
             if (!self::isNull($sessionToken)) {
                 echo "<input type='hidden' name='" . self::$name . "' id='" . self::$name . "' value='" . $sessionToken . " />";
@@ -128,7 +128,7 @@ class CsrfSession {
      * Echo the CSRF token in the HTML head
      */
     public static function echoTokenInHtmlHead(): void {
-        if (self::sessionIdValid()) {
+        if (self::validSessionID()) {
             $sessionToken = self::getToken();
             if (!self::isNull($sessionToken)) {
                 echo "<meta name='" . self::$name . "' content='" . $sessionToken . " />";
@@ -146,7 +146,7 @@ class CsrfSession {
      */
     public static function validateTokenFromPost(): bool {
         if (getenv("REQUEST_METHOD") === "POST" && isset($_POST[self::$name]) && !empty($_POST[self::$name])) {
-            $isValid = Csrf::validateToken(self::$csrfKey, base64_decode((string) $_POST[self::$name]));
+            $isValid = Csrf::validateToken(self::$csrfKey, hex2bin((string) $_POST[self::$name]));
             if ($isValid) {
                 self::unsetToken();
             } else {
@@ -167,7 +167,7 @@ class CsrfSession {
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
             if (isset($headers[self::$name]) && !empty($headers[self::$name])) {
-                $isValid = Csrf::validateToken(self::$csrfKey, base64_decode((string) $headers[self::$name]));
+                $isValid = Csrf::validateToken(self::$csrfKey, hex2bin((string) $headers[self::$name]));
                 if ($isValid) {
                     self::unsetToken();
                 } else {
@@ -196,16 +196,16 @@ class CsrfSession {
      * Check if the session ID is valid
      * @return bool
      */
-    private static function sessionIdValid(): bool {
+    private static function validSessionID(): bool {
         $sessionId = session_id();
-        return is_string($sessionId) && !empty($sessionId);
+        return is_string($sessionId) && Utils::isNotEmptyString($sessionId);
     }
 
     /**
      * Unset the CSRF token
      */
     private static function unsetToken(): void {
-        if (self::sessionIdValid()) {
+        if (self::validSessionID()) {
             if (isset($_SESSION[self::$name])) {
                 unset($_SESSION[self::$name]);
             }
