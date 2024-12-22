@@ -202,6 +202,20 @@ class Captcha {
     }
 
     /**
+     * A red color array
+     * @param \GdImage $image Reference to the image
+     * @return array
+     */
+    private static function redColor(\GdImage &$image, array $options = array()): false | int {
+        if (Utils::isNotFalse($image)) {
+            $alpha = intval($options['transparency_percentage'] / 100 * 127);
+            $color = Captcha::hex2rgb("#FF0000");
+            return imagecolorallocatealpha($image, $color['r'], $color['g'], $color['b'], $alpha);
+        }
+        return false;
+    }
+
+    /**
      * Hex color to RGB color
      * @param string $hex
      * @return array
@@ -592,6 +606,7 @@ class Captcha {
      * @return void This function does not return any value.
      */
     private static function drawCaptchaText(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array(), string $textData = ""): void {
+        $redcolor = Captcha::redColor($image);
         // Ensure that the image, colors array, directories array, and generated text are valid
         if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
             // Define the path to the font file
@@ -706,12 +721,12 @@ class Captcha {
                             $x += round($dimension[0] + $distances[$i]);
                         }
                     }
-                } catch (\Throwable $throwable) {
-                    imagestring($image, 10, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', $colors['captcha']);
+                } catch (\Throwable $throwable) {;
+                    imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', $redcolor);
                 }
             } else {
                 // Display an error message if the font file cannot be loaded
-                imagestring($image, 10, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', $colors['captcha']);
+                imagestring($image, 5, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', $redcolor);
             }
         }
     }
