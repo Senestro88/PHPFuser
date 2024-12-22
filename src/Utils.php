@@ -3433,6 +3433,8 @@ class Utils {
             switch (strtolower($format)) {
                 case 'png':
                     // Create PNG image
+                    // PNG quality ranges from 0 (no compression) to 9 (maximum compression)
+                    $quality = (int) round(9 * (1 - $quality / 100));
                     $success = imagepng($resource, null);
                     break;
                 case 'jpg':

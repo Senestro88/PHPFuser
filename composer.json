@@ -5,7 +5,7 @@
   "license": "MIT",
   "minimum-stability": "beta",
   "prefer-stable": true,
-  "version": "11.2",
+  "version": "11.3",
   "keywords": [
     "phpfuser"
   ],
