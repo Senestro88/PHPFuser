@@ -36,6 +36,7 @@ class Captcha {
         'random_background' => true,
         'random_spaces' => true,
         'random_baseline' => true,
+        'random_angels' => true,
         'signature' => "",
     );
 
@@ -480,14 +481,15 @@ class Captcha {
         // Loop through the number of points defined in $lineParams['n']
         for ($i = 0; $i < $lineParams['n']; ++$i) {
             // Calculate the x-coordinate for the current point
-            $x = round($lineParams['x0'] + $i * $lineParams['dx'] + $lineParams['amp'] * $lineParams['dy'] * sin($lineParams['k'] * $i * 0.5 + $lineParams['phi']), 2);
+            $x = (int) round($lineParams['x0'] + $i * $lineParams['dx'] + $lineParams['amp'] * $lineParams['dy'] * sin($lineParams['k'] * $i * 0.5 + $lineParams['phi']), 2);
             // Calculate the y-coordinate for the current point
-            $y = round($lineParams['y0'] + $i * $lineParams['dy'] - $lineParams['amp'] * $lineParams['dx'] * sin($lineParams['k'] * $i * 0.5 + $lineParams['phi']), 2);
+            $y = (int) round($lineParams['y0'] + $i * $lineParams['dy'] - $lineParams['amp'] * $lineParams['dx'] * sin($lineParams['k'] * $i * 0.5 + $lineParams['phi']), 2);
             // Draw a filled rectangle at the calculated (x, y) position
             // The rectangle's size is controlled by $lineParams['lwid']
-            imagefilledrectangle($image, $x, $y, round($x + $lineParams['lwid']), round($y + $lineParams['lwid']), $color);
+            imagefilledrectangle($image, $x, $y, (int) round($x + $lineParams['lwid']), (int) round($y + $lineParams['lwid']), $color);
         }
     }
+
 
     /**
      * Draw the lines on the captcha image
