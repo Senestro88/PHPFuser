@@ -695,11 +695,11 @@ class Captcha {
                         }
                     }
                 } catch (\Throwable $throwable) {
-                    imagestring($image, 4, 10, ($options['height'] / 2) - 5, 'Failed to load draw Captcha text', $colors['captcha']);
+                    imagestring($image, 10, 10, ($options['height'] / 2) - 5, $throwable->getMessage(), $colors['captcha']);
                 }
             } else {
                 // Display an error message if the font file cannot be loaded
-                imagestring($image, 4, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', $colors['captcha']);
+                imagestring($image, 10, 10, ($options['height'] / 2) - 5, 'Failed to load Font File', $colors['captcha']);
             }
         }
     }
