@@ -374,10 +374,10 @@ class HTMLDocument {
     private function downloadHtml(string $title) {
         // Generate the HTML content for the document.
         $html = $this->geHtml($title);
-        // Get the names for the downloadable files.
-        $downloadNames = $this->getDownloadNames();
-        // Use a utility function to trigger the HTML download.
-        Utils::downloadData($html, $downloadNames['html']);
+        $tempFile = Utils::createTemporaryFilename("png");
+        if (File::saveContentToFile($tempFile, $html)) {
+            Utils::downloadFile($tempFile, true);
+        }
     }
 
     /**
