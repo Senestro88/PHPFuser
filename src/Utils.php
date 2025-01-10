@@ -84,7 +84,10 @@ class Utils {
     private const CHECK_IP_ADDRESS_IN_RANGE = false;
 
 
-    private DeviceDetector $deviceDetector = null;
+    /**
+     * @var DeviceDetector Matomo device detector reference
+     */
+    private ?DeviceDetector $deviceDetector = null;
 
     // PUBLIC METHODS
 
