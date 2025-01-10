@@ -87,7 +87,7 @@ class Utils {
     /**
      * @var DeviceDetector Matomo device detector reference
      */
-    private ?DeviceDetector $deviceDetector = null;
+    private const DEVICE_DETECTOR = null;
 
     // PUBLIC METHODS
 
@@ -2324,16 +2324,13 @@ class Utils {
 
     /**
      * Initialize MobileDetect class
-     * @return false|\MobileDetect
+     * @return false|\CustomDeviceDetector
      */
-    public static function intDeviceDetector(): false|DeviceDetector {
-        if (self::isNull(self::$deviceDetector)) {
-            if (!class_exists("\CustomDeviceDetector")) {
-                self::loadPlugin("CustomDeviceDetector");
-            }
-            self::$deviceDetector = new \CustomDeviceDetector();
+    public static function intDeviceDetector(): \CustomDeviceDetector {
+        if (!class_exists("\CustomDeviceDetector")) {
+            self::loadPlugin("CustomDeviceDetector");
         }
-        return self::$deviceDetector;
+        return new \CustomDeviceDetector();
     }
 
     /**
@@ -2360,7 +2357,7 @@ class Utils {
      */
     public static function getDeviceOsName(): string {
         $dd = self::intDeviceDetector();
-        return $dd->getOS();
+        return $dd->getDeviceOsName();
     }
 
     /**
@@ -2369,7 +2366,7 @@ class Utils {
      */
     public static function getDeviceBrand(): string {
         $dd = self::intDeviceDetector();
-        return $dd->getBrandName();
+        return $dd->getDeviceBrand();
     }
 
     /**
