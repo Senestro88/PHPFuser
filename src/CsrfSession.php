@@ -61,7 +61,7 @@ class CsrfSession {
      * @return string|null
      */
     public static function getToken(): ?string {
-        return self::validSessionID() && isset($_SESSION) && isset($_SESSION[self::$name]) && is_string($_SESSION[self::$name]) && Utils::isNotEmptyString($_SESSION[self::$name]) ? $_SESSION[self::$name] : null;
+        return self::validSessionID() && isset($_SESSION) && isset($_SESSION[self::$name]) && is_string($_SESSION[self::$name]) && Utils::isNotEmptyString($_SESSION[self::$name]) ? (string) $_SESSION[self::$name] : null;
     }
 
     /**

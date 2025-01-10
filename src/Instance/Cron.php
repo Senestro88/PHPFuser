@@ -2,6 +2,7 @@
 
 namespace PHPFuser\Instance;
 
+use PHPFuser\CommandExecutor;
 use PHPFuser\File;
 use \PHPFuser\Utils;
 
@@ -49,7 +50,7 @@ class Cron {
         if (Utils::isNotEmptyString(self::$executable) && !empty($crons)) {
             $created = array();
             foreach ($this->commands($crons) as $path => $command) {
-                $created[$path] = Utils::executeCommandUsingPopen($command);
+                $created[$path] = CommandExecutor::usePopen($command);
             }
             return $created;
         }

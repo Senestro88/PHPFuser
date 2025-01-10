@@ -7,6 +7,8 @@ use Dompdf\Options;
 use Mpdf\Mpdf;
 use PHPFuser\File;
 use PHPFuser\Path;
+use DeviceDetector\DeviceDetector;
+use DeviceDetector\Parser\Device\DeviceParserAbstract;
 
 /**
  * @author Senestro
@@ -80,6 +82,9 @@ class Utils {
      * @var bool Wether to check for Ip in private Ip ranges
      */
     private const CHECK_IP_ADDRESS_IN_RANGE = false;
+
+
+    private DeviceDetector $deviceDetector = null;
 
     // PUBLIC METHODS
 
@@ -1759,142 +1764,6 @@ class Utils {
     }
 
     /**
-     * Execute a command
-     * @param string $command
-     * @return array|string
-     */
-    public static function executeCommand(string $command): array|string {
-        $output = "";
-        if (self::isNotEmptyString($command)) {
-            $command = escapeshellcmd($command);
-            $output = self::executeCommandUsingExec($command);
-        }
-        return $output;
-    }
-
-    /**
-     * Execute a command using popen
-     * @param string $command
-     * @return string
-     */
-    public static function executeCommandUsingPopen(string $command): string {
-        $output = "";
-        if (self::isNotEmptyString($command) && function_exists('popen')) {
-            $handle = @popen($command, 'r');
-            if (self::isResource($handle)) {
-                $content = @stream_get_contents($handle);
-                if (self::isString($content)) {
-                    $output = $content;
-                }
-                @pclose($handle);
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Execute a command using proc_open
-     * @param string $command
-     * @return string
-     */
-    public static function executeCommandUsingProcopen(string $command): string {
-        $output = "";
-        if (self::isNotEmptyString($command) && function_exists('proc_open')) {
-            $errorFilename = self::createTemporaryFilename("proc", "execute_command_error_output");
-            $descriptorspec = array(0 => array("pipe", "r"), 1 => array("pipe", "w"), 2 => array("file", $errorFilename, "a"));
-            $process = @proc_open($command, $descriptorspec, $pipes);
-            if (is_resource($process)) {
-                // Writeable handle connected to child stdin
-                if (isset($pipes[0])) {
-                    @fclose($pipes[0]);
-                }
-                // Readable handle connected to child stdout
-                if (isset($pipes[1])) {
-                    $content = @stream_get_contents($pipes[1]);
-                    fclose($pipes[1]);
-                    if (self::isString($content)) {
-                        $output = $content;
-                    }
-                }
-                @proc_close($process);
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Execute a command using exec
-     * @param string $command
-     * @return array
-     */
-    public static function executeCommandUsingExec(string $command): array {
-        $output = array();
-        if (self::isNotEmptyString($command) && function_exists('exec')) {
-            $content = array();
-            $resultcode = 0;
-            @exec($command, $content, $resultcode);
-            if (self::isArray($content)) {
-                $output = array_values($content);
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Execute a command using shell_exec
-     * @param string $command
-     * @return string
-     */
-    public static function executeCommandUsingShellexec(string $command): string {
-        $output = "";
-        if (self::isNotEmptyString($command) && function_exists('shell_exec')) {
-            $content = shell_exec($command);
-            if (self::isString($content)) {
-                $output = $content;
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Execute a command using system
-     * @param string $command
-     * @return string
-     */
-    public static function executeCommandUsingSystem(string $command): string {
-        $output = "";
-        if (self::isNotEmptyString($command) && function_exists('system')) {
-            $resultcode = 0;
-            $content = system($command, $resultcode);
-            if (self::isString($content)) {
-                $output = $content;
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Execute a command using passthru
-     * @param string $command
-     * @return string
-     */
-    public static function executeCommandUsingPassthru(string $command): string {
-        $output = "";
-        if (self::isNotEmptyString($command) && function_exists('passthru')) {
-            $resultcode = 0;
-            ob_start();
-            passthru($command, $resultcode);
-            $content = ob_get_contents();
-            if (self::isString($content)) {
-                $output = $content;
-            }
-            // Use this instead of ob_flush()
-            ob_end_clean();
-        }
-        return $output;
-    }
-
-    /**
      * Get the current directory
      * @return string
      */
@@ -2344,28 +2213,43 @@ class Utils {
     }
 
     /**
-     * Set audio meta tags
-     * @param string $audioName
-     * @param string $coverName
-     * @param array $options
-     * @return bool
+     * Set audio metadata tags for a given audio file.
+     * 
+     * This function sets metadata tags like title, artist, album, year, genre, and more
+     * on an audio file (MP3, for example), including an attached cover image. It uses the
+     * getID3 library to write the metadata to the audio file.
+     *
+     * @param string $audioName  The path to the audio file.
+     * @param string $coverName  The path to the cover image (usually a PNG or JPEG).
+     * @param array  $options    Optional metadata to be set (e.g., title, artist, album, year,genre,  track_number, etc.).
+     *
+     * @return bool  Returns true on success, false on failure.
      */
     public static function setAudioMetaTags(string $audioName, string $coverName, array $options = array()): bool {
+        // Check if the audio file and cover image exist and are valid
         if ((File::isFile($audioName) && Media::ivValidAudioByFilename($audioName)) && File::isFile($coverName)) {
+            // Resolve the file paths
             $audioName = self::resolvePath($audioName);
             $coverName = self::resolvePath($coverName);
+            // Check if the required classes for reading and writing tags exist
             $classesExists = class_exists("\getID3") && class_exists("\getid3_writetags");
+            // Proceed if the classes exist and options array is not empty
             if (self::isTrue($classesExists) && self::isNotEmptyArray($options)) {
+                // Initialize getID3 and getid3_writetags objects
                 $getID3 = new \getID3();
                 $writer = new \getid3_writetags();
+                // Set encoding options for the metadata
                 $encoding = 'UTF-8';
                 $getID3->setOption(array('encoding' => $encoding));
+                // Set up the writer's parameters
                 $writer->filename = $audioName;
                 $writer->tagformats = array('id3v1', 'id3v2.3');
                 $writer->overwrite_tags = true;
                 $writer->tag_encoding = $encoding;
                 $writer->remove_other_tags = true;
+                // Initialize an array to hold the metadata tags
                 $data = array();
+                // Set individual metadata tags if they exist in the options array
                 if (isset($options['title'])) {
                     $data['title'] = array($options['title']);
                 }
@@ -2393,25 +2277,34 @@ class Utils {
                 if (isset($options['unique_file_identifier'])) {
                     $data['unique_file_identifier'] = array('ownerid' => "email", 'data' => md5(time()));
                 }
+                // Create a temporary directory for the cover image
                 $tempPathname = Path::insert_dir_separator(Path::arrange_dir_separators(PHPFUSER['DIRECTORIES']['DATA'] . DIRECTORY_SEPARATOR . 'getid3' . DIRECTORY_SEPARATOR . 'temp'));
+                // Ensure the temporary directory exists
                 if (File::createFile($tempPathname)) {
+                    // Generate a random filename for the cover image and convert it to PNG
                     $random = self::generateRandomFilename("png");
                     $_covername = $tempPathname . '' . $random;
                     if (self::convertImage($coverName, "png", false, true, $_covername)) {
                         $coverName = $_covername;
                     }
+                    // Attach the cover image to the metadata
                     $data['attached_picture'][0]['data'] = File::getFileContent($coverName);
-                    $data['attached_picture'][0]['picturetypeid'] = 3;
+                    $data['attached_picture'][0]['picturetypeid'] = 3;  // MIME type: image
                     $data['attached_picture'][0]['description'] = isset($options['comment']) ? $options['comment'] : "";
                     $data['attached_picture'][0]['mime'] = mime_content_type($coverName);
+                    // Assign the metadata to the writer
                     $writer->tag_data = $data;
+                    // Delete the temporary cover image file
                     File::deleteFile($_covername);
+                    // Write the tags to the audio file and return the result
                     return @$writer->WriteTags();
                 }
             }
         }
+        // Return false if any of the conditions fail
         return false;
     }
+
 
     /**
      * Clean PHPFuser temporary files
@@ -2430,11 +2323,14 @@ class Utils {
      * Initialize MobileDetect class
      * @return false|\MobileDetect
      */
-    public static function intMobileDetect(): false|\MobileDetect {
-        if (!class_exists("\MobileDetect")) {
-            self::loadPlugin("MobileDetect");
+    public static function intDeviceDetector(): false|DeviceDetector {
+        if (self::isNull(self::$deviceDetector)) {
+            if (!class_exists("\CustomDeviceDetector")) {
+                self::loadPlugin("CustomDeviceDetector");
+            }
+            self::$deviceDetector = new \CustomDeviceDetector();
         }
-        return class_exists("\Detection\MobileDetect") ? new \MobileDetect() : false;
+        return self::$deviceDetector;
     }
 
     /**
@@ -2442,12 +2338,8 @@ class Utils {
      * @return string
      */
     public static function getBrowser(): string {
-        $browser = "";
-        $md = self::intMobileDetect();
-        if (self::isNotFalse($md)) {
-            $browser = $md->getBrowser();
-        }
-        return $browser;
+        $dd = self::intDeviceDetector();
+        return $dd->getBrowser();
     }
 
     /**
@@ -2455,12 +2347,8 @@ class Utils {
      * @return string
      */
     public static function getDevice(): string {
-        $devices = "";
-        $md = self::intMobileDetect();
-        if (self::isNotFalse($md)) {
-            $devices = $md->getDevice();
-        }
-        return $devices;
+        $dd = self::intDeviceDetector();
+        return $dd->getDevice();
     }
 
     /**
@@ -2468,12 +2356,8 @@ class Utils {
      * @return string
      */
     public static function getDeviceOsName(): string {
-        $os = "";
-        $md = self::intMobileDetect();
-        if (self::isNotFalse($md)) {
-            $os = $md->getDeviceOsName();
-        }
-        return $os;
+        $dd = self::intDeviceDetector();
+        return $dd->getOS();
     }
 
     /**
@@ -2481,12 +2365,8 @@ class Utils {
      * @return string
      */
     public static function getDeviceBrand(): string {
-        $brand = "";
-        $md = self::intMobileDetect();
-        if (self::isNotFalse($md)) {
-            $brand = $md->getDeviceBrand();
-        }
-        return $brand;
+        $dd = self::intDeviceDetector();
+        return $dd->getBrandName();
     }
 
     /**
@@ -2494,12 +2374,8 @@ class Utils {
      * @return array
      */
     public static function getIPInfo(): array {
-        $info = array();
-        $md = self::intMobileDetect();
-        if (self::isNotFalse($md)) {
-            $info = $md->getIPInfo();
-        }
-        return $info;
+        $dd = self::intDeviceDetector();
+        return $dd->getIPInfo();
     }
 
     /**
@@ -3607,6 +3483,7 @@ class Utils {
         // If realpath fails, return false
         return false;
     }
+
 
     // PRIVATE METHODS
 
