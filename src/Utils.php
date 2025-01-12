@@ -8,7 +8,9 @@ use Mpdf\Mpdf;
 use PHPFuser\File;
 use PHPFuser\Path;
 use DeviceDetector\DeviceDetector;
-use DeviceDetector\Parser\Device\DeviceParserAbstract;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @author Senestro
@@ -1114,26 +1116,14 @@ class Utils {
     public static function downloadFile(string $file, bool $delete = false): bool {
         // Check if the file exists and headers have not been sent
         if (File::isFile($file) && !self::headersSent()) {
-            // Send necessary headers for file download
-            header('Content-Description: File Transfer');
-            header('Content-Type: ' . mime_content_type($file));
-            header('Content-Disposition: attachment; filename=' . basename($file));
-            header('Content-Transfer-Encoding: binary');
-            header('Expires: 0');
-            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-            header('Pragma: public');
-            header('Content-Length: ' . File::getFilesizeInBytes($file));
-            // Clear the output buffer before sending the file
-            flush();
-            // Read the file and send it to the output
-            if (readfile($file) === false) {
-                // Handle error if read fails
-                return false;
-            }
-            // Delete file if requested
-            if ($delete) {
-                File::deleteFile($file);
-            }
+            // Create a BinaryFileResponse
+            $response = new BinaryFileResponse($file);
+            // Set the content disposition to trigger a download
+            $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, basename($file));
+            // Delete the file after the response is sent
+            $response->deleteFileAfterSend($delete);
+            // Send the response to the browser
+            $response->send();
             return true;
         }
         return false;
@@ -1177,19 +1167,15 @@ class Utils {
     public static function downloadData(string $content, string $filename, string $mimeType = 'application/octet-stream'): bool {
         // Check if headers have not been sent
         if (!self::headersSent()) {
-            // Send necessary headers for content download
-            header('Content-Description: File Transfer');
-            header('Content-Type: ' . $mimeType);
-            header('Content-Disposition: attachment; filename=' . $filename);
-            header('Content-Transfer-Encoding: binary');
-            header('Expires: 0');
-            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-            header('Pragma: public');
-            header('Content-Length: ' . strlen($content));
-            // Clear the output buffer before sending the content
-            flush();
-            // Output the content directly
-            echo $content;
+            // Create a Response object
+            $response = new Response($content);
+            // Set headers to trigger the download
+            $response->headers->set('Content-Type', '' . $mimeType . '');
+            $response->headers->set('Content-Description', 'File Transfer');
+            $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            $response->headers->set('Content-Length', strlen($content));
+            // Send the response to the browser
+            $response->send();
             return true;
         }
         return false;
