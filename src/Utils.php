@@ -3470,6 +3470,27 @@ class Utils {
         return false;
     }
 
+    /**
+     * Generate a random ID with the specified length.
+     *
+     * @param int $length Length of the random ID.
+     * @param bool $onlyNumbers Whether to generate an ID with only numbers.
+     * @param bool $includeZero Whether to include zero (0)
+     * @return string Randomly generated ID.
+     */
+    public static function generateRandomId(int $length, bool $onlyNumbers = false, bool $includeZero = true): string {
+        // Define the characters to use
+        $characters = ($includeZero ? "0" : "") . ($onlyNumbers ? "123456789" : "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        $charactersLength = strlen($characters);
+        $randomId = '';
+        // Generate the random string
+        for ($i = 0; $i < $length; $i++) {
+            $randomId .= $characters[random_int(0, $charactersLength - 1)];
+        }
+        return $randomId;
+    }
+
+
 
     // PRIVATE METHODS
 
