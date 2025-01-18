@@ -41,11 +41,11 @@ if (is_dir($PHPFUSER_VENDOR_DIR) && is_readable($PHPFUSER_VENDOR_DIR)) {
 
 // THE AUTOLOADER CALLBACK
 if (!function_exists("PHPFuserAutoloader")) {
-
     function PHPFuserAutoloader(string $classname) {
+        $split = \explode("\\", $classname);
         $namespace = 'PHPFuser';
         // Check if the class belongs to the PHPFuser namespace
-        if (strpos($classname, $namespace, 0) === 0) {
+        if (strpos($classname, $namespace, 0) === 0 && $split[0] === $namespace) {
             $className = str_replace("$namespace\\", '', $classname);
             $relativeName = str_replace('\\', DIRECTORY_SEPARATOR, $className) . '.php';
             require_once PHPFUSER['DIRECTORIES']['SRC'] . $relativeName;
