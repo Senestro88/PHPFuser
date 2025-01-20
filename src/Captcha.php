@@ -526,8 +526,6 @@ class Captcha {
             }
         }
     }
-
-    
     /**
      * Create a bounding box details from text
      * @param float $size
