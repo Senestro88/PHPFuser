@@ -535,7 +535,7 @@ class Captcha {
      * @param string $text
      * @return array
      */
-    private static function boundingBoxDetails(float $size = 15, float $angle = 0, string $font = null, string $text = ""): array {
+    private static function boundingBoxDetails(float $size = 15, float $angle = 0, string $font, string $text = ""): array {
         $bbox = @imagettfbbox($size, $angle, $font, $text);
         $data = array();
         if (Utils::isNotFalse($bbox)) {
