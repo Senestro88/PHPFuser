@@ -992,7 +992,8 @@ class Utils {
      * @return bool True if $substring is found in $string, false otherwise.
      */
     public static function containText(string $substring, string $string): bool {
-        return strpos($string, $substring) !== false;
+        // Use str_contains if it exists (PHP 8.0+), otherwise fallback to preg_match
+        return function_exists('str_contains') ? str_contains($string, $substring) : strpos($string, $substring) !== false;
     }
 
     /**
@@ -1002,8 +1003,12 @@ class Utils {
      * @return bool True if $string starts with $start, false otherwise.
      */
     public static function startsWith(string $substring, string $string): bool {
-        $substring = trim($substring);
-        return strncmp($string, $substring, strlen($substring)) === 0;
+        if (function_exists("str_starts_with")) {
+            return str_starts_with($string, $substring);
+        } else {
+            $trimmed = trim($substring);
+            return $trimmed === '' ? true : strncmp($string, $trimmed, strlen($trimmed)) === 0;
+        }
     }
 
     /**
@@ -1013,9 +1018,26 @@ class Utils {
      * @return bool True if $string ends with $end, false otherwise.
      */
     public static function endsWith(string $substring, string $string): bool {
-        $substring = trim($substring);
-        return strrpos($string, $substring) === (strlen($string) - strlen($substring));
+        if (function_exists("str_ends_with")) {
+            return str_ends_with($string, $substring);
+        } else {
+            // If the substring is empty, it matches the end of any string
+            if ($substring === '') {
+                return true;
+            } else {
+                // Ensure the substring length does not exceed the string length
+                $substringLength = strlen($substring);
+                $stringLength = strlen($string);
+                if ($substringLength > $stringLength) {
+                    return false;
+                } else {
+                    // Compare the end of the string with the substring
+                    return substr($string, -$substringLength) === $substring;
+                }
+            }
+        }
     }
+
 
     /**
      * Format a bytes to human readable
@@ -2032,31 +2054,31 @@ class Utils {
     }
 
     /**
-     * Calculate remaining time from $unix
-     * @param int $unix
-     * @return int
+     * Calculate remaining time in days from the given UNIX timestamp.
+     * 
+     * @param int $unix UNIX timestamp to calculate remaining time from.
+     * @return int Remaining days until the given UNIX timestamp. Returns 0 if the timestamp is in the past.
      */
-    public static function calculateRemainingDaysFromUnix(int $unix) {
-        $days = 0;
+    public static function calculateRemainingDaysFromUnix(int $unix): int {
         if ($unix > time()) {
-            $devided = (($unix - time()) / 86400);
-            return round($devided, 0);
+            $remainingTime = max(0, $unix - time());
+            return intdiv($remainingTime, 86400); // Use integer division for precise results
         }
-        return $days;
+        return 0;
     }
 
     /**
-     * Calculate elapsed time from $unix
-     * @param int $unix
-     * @return int
+     * Calculate elapsed time in days since the given UNIX timestamp.
+     * 
+     * @param int $unix UNIX timestamp to calculate elapsed time from.
+     * @return int Elapsed days since the given UNIX timestamp. Returns 0 if the timestamp is in the future.
      */
-    public static function calculateElapsedDaysFromUnix(int $unix) {
-        $days = 0;
+    public static function calculateElapsedDaysFromUnix(int $unix): int {
         if (time() > $unix) {
-            $devided = ((time() - $unix) / 86400);
-            return round($devided, 0);
+            $elapsedTime = time() - $unix;
+            return intdiv($elapsedTime, 86400); // Use integer division for precise results
         }
-        return $days;
+        return 0;
     }
 
     /**
