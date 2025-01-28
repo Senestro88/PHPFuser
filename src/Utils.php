@@ -3561,4 +3561,76 @@ class Utils {
             return true;
         }
     }
+
+    /**
+     * Checks if a value (string or integer) is strictly equal to a given integer.
+     *
+     * @param string|int $value  The value to check, can be a string or integer.
+     * @param int        $equals The integer to compare against.
+     * @return bool True if the value is numeric, integer-like, and equals the given integer.
+     */
+    public static function isIntEquals(string | int $value, int $equals): bool {
+        // Check if the value is numeric and integer-like (no decimals or scientific notation).
+        return ctype_digit((string) $value) && (int) $value === $equals;
+    }
+
+    /**
+     * Checks if a string value is equal to another string, with optional case sensitivity.
+     *
+     * @param string $value      The value to compare.
+     * @param string $equals     The string to compare against.
+     * @param bool   $sensitive Whether the comparison should be case-sensitive (default: true).
+     * @return bool True if the strings are equal based on the specified sensitivity, false otherwise.
+     */
+    public static function isStringEquals(string $value, string $equals, bool $sensitive = true): bool {
+        return $sensitive ? $value === $equals : strcasecmp($value, $equals) === 0;
+    }
+
+    /**
+     * Concatenate an array of strings into one string.
+     *
+     * @param array $strings The array of strings to concatenate.
+     * @return string The concatenated string.
+     */
+    public static function concactArrayStrings(array $strings): string {
+        return implode('', $strings);
+    }
+
+    /**
+     * Concatenate a list of strings into one string by passing them as individual arguments.
+     *
+     * @param string ...$strings The individual strings to concatenate.
+     * @return string The concatenated string.
+     */
+    public static function concactStrings(string ...$strings): string {
+        return self::concactArrayStrings($strings);
+    }
+
+    /**
+     * Get the initials from a user's full name.
+     *
+     * This function extracts the first letter of each part of the provided full name,
+     * converts it to uppercase, and concatenates the letters to form the initials.
+     *
+     * @param string $fullName The full name of the user (e.g., "John Doe").
+     *                         It can include multiple parts separated by spaces.
+     * @return string The initials of the user's full name in uppercase (e.g., "JD").
+     *
+     * @example
+     * getFullNameInitials("John Doe");           // Returns "JD"
+     * getFullNameInitials("Alice Mary Johnson"); // Returns "AMJ"
+     * getFullNameInitials(" William Henry ");    // Returns "WH"
+     */
+    public static function getFullNameInitials(string $fullName): string {
+        // Split the full name into parts by spaces
+        $nameParts = preg_split('/\s+/', trim($fullName));
+        $initials = '';
+        // Get the first character of each name part
+        foreach ($nameParts as $part) {
+            if (!empty($part)) {
+                $initials .= strtoupper($part[0]);
+            }
+        }
+        return $initials;
+    }
 }
