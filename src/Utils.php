@@ -3633,4 +3633,33 @@ class Utils {
         }
         return $initials;
     }
+
+    /**
+     * Generate a secure random password for AES CBC encryption.
+     *
+     * This function generates a password of the specified length, using a combination
+     * of uppercase and lowercase letters, numbers, and special characters.
+     * The length is guaranteed to be at least 16 characters.
+     *
+     * @param int $length The length of the generated password (default is 16).
+     *                    The length must be a positive integer.
+     *
+     * @return string The generated password.
+     *                A string containing a randomly generated password of the specified length.
+     */
+    public static function generateAESPassword(int $length = 16) {
+        // Validate the length parameter
+        $length = max(16, $length);
+        // Define the characters allowed in the password
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?';
+        // Initialize an empty string to store the password
+        $password = '';
+        // Generate a random password of the specified length
+        for ($i = 0; $i < $length; $i++) {
+            // Randomly pick a character from the allowed characters
+            $password .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+        // Return the generated password
+        return $password;
+    }
 }
