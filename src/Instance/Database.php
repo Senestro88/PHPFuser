@@ -266,6 +266,49 @@ class Database {
     }
 
     /**
+     * Renames a database table.
+     *
+     * @param string $fullFromTablename The current name of the table, including any necessary schema, dots or database prefix.
+     * @param string $fullToTablename The new name for the table, including any necessary schema, dots or database prefix.
+     * @return bool Returns true if the table was successfully renamed, false otherwise.
+     */
+    public function renameDatabaseTable(string $fullFromTablename, string $fullToTablename): bool {
+        if (Utils::isNonNull($this->connection)) {
+            $fullFromTablename = $this->escapeReplace($fullFromTablename);
+            $fullToTablename = $this->escapeReplace($fullToTablename);
+            return Utils::isNotFalse($this->connection->query('RENAME TABLE ' . $fullFromTablename . ' TO ' . $fullToTablename . ';'));
+        }
+        return false;
+    }
+
+    /**
+     * Copies a database table, optionally including its data.
+     *
+     * @param string $fullFromTablename The name of the source table, including any necessary schema, dots or database prefix.
+     * @param string $fullToTablename The name of the new table to create, including any necessary schema, dots or database prefix.
+     * @param bool $withData Whether to copy the data from the source table (default: true).
+     * @return bool Returns true if the table was successfully copied, false otherwise.
+     */
+    public function copyDatabaseTable(string $fullFromTablename, string $fullToTablename, bool $withData = true): bool {
+        if (Utils::isNonNull($this->connection)) {
+            $fullFromTablename = $this->escapeReplace($fullFromTablename);
+            $fullToTablename = $this->escapeReplace($fullToTablename);
+            // Create a new table with the same structure as the source table
+            $copied = $this->connection->query('CREATE TABLE ' . $fullToTablename . ' LIKE  ' . $fullFromTablename . ';');
+            // If copying data is enabled and the table creation was successful
+            if ($withData && $copied) {
+                // Reset auto-increment value for the new table
+                $this->connection->query('ALTER TABLE ' . $fullToTablename . ' AUTO_INCREMENT = 1;');
+                // Copy all data from the source table
+                $this->connection->query('INSERT INTO ' . $fullToTablename . ' SELECT * FROM ' . $fullFromTablename . ';');
+            }
+            return Utils::isNotFalse($copied);
+        }
+        return false;
+    }
+
+
+    /**
      * Check if a database table exist
      * @param string $database The database name
      * @param string $table The database table name
