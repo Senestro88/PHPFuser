@@ -2224,6 +2224,25 @@ class Utils {
     }
 
     /**
+     * Converts a time duration string (H:M:S, M:S, or S) or  (HH:MM:SS, MM:SS, or SS) into total seconds.
+     *
+     * @param string $duration The time duration string in the format ("H:M:S", "M:S", or "S") or ("HH:MM:SS", "MM:SS", or "SS").
+     * @return int The total duration in seconds.
+     */
+    public static function convertDurationToPlaytimeTicks(string $duration): int {
+        // Split the duration string by colon (":") and reverse the order
+        $parts = array_reverse(explode(':', $duration));
+        // Define multipliers for seconds, minutes, and hours
+        $multipliers = [1, 60, 3600]; // 1 second, 60 seconds (1 minute), 3600 seconds (1 hour)
+        $seconds = 0;
+        // Loop through the parts and multiply by corresponding time units
+        foreach ($parts as $index => $part) {
+            $seconds += ((int)$part * $multipliers[$index]);
+        }
+        return $seconds;
+    }
+
+    /**
      * Set audio metadata tags for a given audio file.
      * 
      * This function sets metadata tags like title, artist, album, year, genre, and more
@@ -3635,31 +3654,40 @@ class Utils {
     }
 
     /**
-     * Generate a secure random password for AES CBC encryption.
+     * Generate a secure random password for AES encryption.
      *
      * This function generates a password of the specified length, using a combination
-     * of uppercase and lowercase letters, numbers, and special characters.
-     * The length is guaranteed to be at least 16 characters.
+     * of uppercase and lowercase letters, numbers, and optionally special characters.
+     * The length is guaranteed to be at least 16 characters for security reasons.
      *
-     * @param int $length The length of the generated password (default is 16).
-     *                    The length must be a positive integer.
+     * @param int  $length           The length of the generated password (default is 16).
+     *                                The length must be a positive integer and will be adjusted
+     *                                to at least 16 if a lower value is provided.
+     * @param bool $addSpecialChars   Whether to include special characters in the password.
+     *                                Defaults to true.
      *
-     * @return string The generated password.
-     *                A string containing a randomly generated password of the specified length.
+     * @return string                 A randomly generated password containing the specified
+     *                                types of characters.
      */
-    public static function generateAESPassword(int $length = 16) {
-        // Validate the length parameter
+    public static function generateAESPassword(int $length = 16, bool $addSpecialChars = true): string {
+        // Ensure the password length is at least 16 for security purposes
         $length = max(16, $length);
-        // Define the characters allowed in the password
-        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?';
-        // Initialize an empty string to store the password
+        // Define the character pool for the password
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        // Append special characters if allowed
+        if ($addSpecialChars) {
+            $characters .= '!@#$%^&*()-_=+[]{}|;:,.<>?';
+        }
+        // Remove any non-printable characters (ASCII < 32 and ASCII 127)
+        $characters = preg_replace('/[^\x20-\x7E]/', '', $characters);
+        // Initialize an empty string to store the generated password
         $password = '';
         // Generate a random password of the specified length
         for ($i = 0; $i < $length; $i++) {
-            // Randomly pick a character from the allowed characters
+            // Select a random character from the allowed set
             $password .= $characters[random_int(0, strlen($characters) - 1)];
         }
-        // Return the generated password
+        // Return the securely generated password
         return $password;
     }
 }
