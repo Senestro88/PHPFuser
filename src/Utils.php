@@ -3690,4 +3690,19 @@ class Utils {
         // Return the securely generated password
         return $password;
     }
+
+    /**
+     * Compares two integers and returns whether they are not the same.
+     *
+     * This method checks if the two provided integers are not equal to each other.
+     * It returns `true` if the integers are different, and `false` if they are the same.
+     *
+     * @param int $a The first integer to compare.
+     * @param int $b The second integer to compare.
+     * 
+     * @return bool `true` if the integers are different, `false` otherwise.
+     */
+    public static function notSameInt(int $a, int $b): bool {
+        return $a != $b;
+    }
 }
