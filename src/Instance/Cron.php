@@ -103,10 +103,10 @@ class Cron {
     /**
      * Format the crons with and option to redirect the crons command to "> /dev/null 2>&1" (Silent the cron ouput)
      * @param array $crons The Crons
-     * @param type $silent Wether to silent the crons output
+     * @param bool $silent Wether to silent the crons output
      * @return array
      */
-    private function commands(array $crons = array(), $silent = true): array {
+    private function commands(array $crons = array(), bool $silent = true): array {
         $os = strtolower(Utils::getOS());
         $commands = array();
         if (Utils::isNotEmptyString(self::$executable) && function_exists("exec")) {

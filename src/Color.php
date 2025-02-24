@@ -243,10 +243,6 @@ class Color {
                     'hex' => '#483D8B',
                     'rgb' => array(0 => 72, 1 => 61, 2 => 139),
                 ),
-                'DarkSlateGray' => array(
-                    'hex' => '#2F4F4F',
-                    'rgb' => array(0 => 47, 1 => 79, 2 => 79),
-                ),
                 'DarkTurquoise' => array(
                     'hex' => '#00CED1',
                     'rgb' => array(0 => 0, 1 => 206, 2 => 209),
@@ -262,10 +258,6 @@ class Color {
                 'DeepSkyBlue' => array(
                     'hex' => '#00BFFF',
                     'rgb' => array(0 => 0, 1 => 191, 2 => 255),
-                ),
-                'DimGray' => array(
-                    'hex' => '#696969',
-                    'rgb' => array(0 => 105, 1 => 105, 2 => 105),
                 ),
                 'DodgerBlue' => array(
                     'hex' => '#1E90FF',
@@ -286,10 +278,6 @@ class Color {
                 'Fuchsia' => array(
                     'hex' => '#FF00FF',
                     'rgb' => array(0 => 255, 1 => 0, 2 => 255),
-                ),
-                'Gainsboro' => array(
-                    'hex' => '#DCDCDC',
-                    'rgb' => array(0 => 220, 1 => 220, 2 => 220),
                 ),
                 'GhostWhite' => array(
                     'hex' => '#F8F8FF',
@@ -367,10 +355,6 @@ class Color {
                     'hex' => '#90EE90',
                     'rgb' => array(0 => 144, 1 => 238, 2 => 144),
                 ),
-                'LightGray' => array(
-                    'hex' => '#D3D3D3',
-                    'rgb' => array(0 => 211, 1 => 211, 2 => 211),
-                ),
                 'LightPink' => array(
                     'hex' => '#FFB6C1',
                     'rgb' => array(0 => 255, 1 => 182, 2 => 193),
@@ -387,10 +371,6 @@ class Color {
                     'hex' => '#87CEFA',
                     'rgb' => array(0 => 135, 1 => 206, 2 => 250),
                 ),
-                'LightSlateGray' => array(
-                    'hex' => '#778899',
-                    'rgb' => array(0 => 119, 1 => 136, 2 => 153),
-                ),
                 'LightSteelBlue' => array(
                     'hex' => '#B0C4DE',
                     'rgb' => array(0 => 176, 1 => 196, 2 => 222),
@@ -399,10 +379,6 @@ class Color {
                     'hex' => '#FFFFE0',
                     'rgb' => array(0 => 255, 1 => 255, 2 => 224),
                 ),
-                'Lime' => array(
-                    'hex' => '#00FF00',
-                    'rgb' => array(0 => 0, 1 => 255, 2 => 0),
-                ),
                 'LimeGreen' => array(
                     'hex' => '#32CD32',
                     'rgb' => array(0 => 50, 1 => 205, 2 => 50),
@@ -410,14 +386,6 @@ class Color {
                 'Linen' => array(
                     'hex' => '#FAF0E6',
                     'rgb' => array(0 => 250, 1 => 240, 2 => 230),
-                ),
-                'Magenta' => array(
-                    'hex' => '#FF00FF',
-                    'rgb' => array(0 => 255, 1 => 0, 2 => 255),
-                ),
-                'Maroon' => array(
-                    'hex' => '#800000',
-                    'rgb' => array(0 => 128, 1 => 0, 2 => 0),
                 ),
                 'MediumAquaMarine' => array(
                     'hex' => '#66CDAA',
@@ -475,25 +443,13 @@ class Color {
                     'hex' => '#FFDEAD',
                     'rgb' => array(0 => 255, 1 => 222, 2 => 173),
                 ),
-                'Navy' => array(
-                    'hex' => '#000080',
-                    'rgb' => array(0 => 0, 1 => 0, 2 => 128),
-                ),
                 'OldLace' => array(
                     'hex' => '#FDF5E6',
                     'rgb' => array(0 => 253, 1 => 245, 2 => 230),
                 ),
-                'Olive' => array(
-                    'hex' => '#808000',
-                    'rgb' => array(0 => 128, 1 => 128, 2 => 0),
-                ),
                 'OliveDrab' => array(
                     'hex' => '#6B8E23',
                     'rgb' => array(0 => 107, 1 => 142, 2 => 35),
-                ),
-                'Orange' => array(
-                    'hex' => '#FFA500',
-                    'rgb' => array(0 => 255, 1 => 165, 2 => 0),
                 ),
                 'OrangeRed' => array(
                     'hex' => '#FF4500',
@@ -531,10 +487,6 @@ class Color {
                     'hex' => '#CD853F',
                     'rgb' => array(0 => 205, 1 => 133, 2 => 63),
                 ),
-                'Pink' => array(
-                    'hex' => '#FFC0CB',
-                    'rgb' => array(0 => 255, 1 => 192, 2 => 203),
-                ),
                 'Plum' => array(
                     'hex' => '#DDA0DD',
                     'rgb' => array(0 => 221, 1 => 160, 2 => 221),
@@ -542,14 +494,6 @@ class Color {
                 'PowderBlue' => array(
                     'hex' => '#B0E0E6',
                     'rgb' => array(0 => 176, 1 => 224, 2 => 230),
-                ),
-                'Purple' => array(
-                    'hex' => '#800080',
-                    'rgb' => array(0 => 128, 1 => 0, 2 => 128),
-                ),
-                'Red' => array(
-                    'hex' => '#FF0000',
-                    'rgb' => array(0 => 255, 1 => 0, 2 => 0),
                 ),
                 'RosyBrown' => array(
                     'hex' => '#BC8F8F',
@@ -562,10 +506,6 @@ class Color {
                 'SaddleBrown' => array(
                     'hex' => '#8B4513',
                     'rgb' => array(0 => 139, 1 => 69, 2 => 19),
-                ),
-                'Salmon' => array(
-                    'hex' => '#FA8072',
-                    'rgb' => array(0 => 250, 1 => 128, 2 => 114),
                 ),
                 'SandyBrown' => array(
                     'hex' => '#F4A460',
@@ -583,10 +523,6 @@ class Color {
                     'hex' => '#A0522D',
                     'rgb' => array(0 => 160, 1 => 82, 2 => 45),
                 ),
-                'Silver' => array(
-                    'hex' => '#C0C0C0',
-                    'rgb' => array(0 => 192, 1 => 192, 2 => 192),
-                ),
                 'SkyBlue' => array(
                     'hex' => '#87CEEB',
                     'rgb' => array(0 => 135, 1 => 206, 2 => 235),
@@ -594,10 +530,6 @@ class Color {
                 'SlateBlue' => array(
                     'hex' => '#6A5ACD',
                     'rgb' => array(0 => 106, 1 => 90, 2 => 205),
-                ),
-                'SlateGray' => array(
-                    'hex' => '#708090',
-                    'rgb' => array(0 => 112, 1 => 128, 2 => 144),
                 ),
                 'Snow' => array(
                     'hex' => '#FFFAFA',
@@ -614,10 +546,6 @@ class Color {
                 'Tan' => array(
                     'hex' => '#D2B48C',
                     'rgb' => array(0 => 210, 1 => 180, 2 => 140),
-                ),
-                'Teal' => array(
-                    'hex' => '#008080',
-                    'rgb' => array(0 => 0, 1 => 128, 2 => 128),
                 ),
                 'Thistle' => array(
                     'hex' => '#D8BFD8',
@@ -639,17 +567,9 @@ class Color {
                     'hex' => '#F5DEB3',
                     'rgb' => array(0 => 245, 1 => 222, 2 => 179),
                 ),
-                'White' => array(
-                    'hex' => '#FFFFFF',
-                    'rgb' => array(0 => 255, 1 => 255, 2 => 255),
-                ),
                 'WhiteSmoke' => array(
                     'hex' => '#F5F5F5',
                     'rgb' => array(0 => 245, 1 => 245, 2 => 245),
-                ),
-                'Yellow' => array(
-                    'hex' => '#FFFF00',
-                    'rgb' => array(0 => 255, 1 => 255, 2 => 0),
                 ),
                 'YellowGreen' => array(
                     'hex' => '#9ACD32',

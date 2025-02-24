@@ -12,13 +12,10 @@ trait ImageFlipDirectionTrait {
         switch ($this->value) {
             case 'vertical':
                 return SpatieFlipDirection::Vertical;
-                break;
             case 'horizontal':
                 return SpatieFlipDirection::Horizontal;
-                break;
             default:
                 return SpatieFlipDirection::Both;
-                break;
         }
     }
 }

@@ -446,7 +446,7 @@ class Utils {
     /**
      *
      * @return string
-     * @return stringGet the host (localhost)
+     * @return string Get the host (localhost)
      * @return string
      */
     public static function host(): string {
@@ -726,7 +726,7 @@ class Utils {
      * Sets the permissions of a file or directory, optionally recursively.
      *
      * This method sets the file or directory permissions to predefined constants
-     * (`FILE_PERMISSION` for files and `DIRECTORY_PERMISSION` for directories). 
+     * (`FILE_PERMISSION` for files and `DIRECTORY_PERMISSION` for directories).
      * If the `$recursive` flag is set to true, it recursively sets the permissions
      * for all files and subdirectories within the specified directory.
      *
@@ -1071,15 +1071,15 @@ class Utils {
 
     /**
      * Generates a random text of the specified length.
-     * 
+     *
      * @param int $length The length of the random text. Defaults to 10 and max is 200.
      * @return string The generated random text.
      */
     /**
      * Generates a random string of the specified length.
      *
-     * This method creates a random string using a defined set of characters 
-     * (lowercase letters, uppercase letters, and digits). The length of the 
+     * This method creates a random string using a defined set of characters
+     * (lowercase letters, uppercase letters, and digits). The length of the
      * generated string is constrained to be between 10 and 300 characters.
      *
      * @param int $length The desired length of the random string (default is 10).
@@ -1127,12 +1127,12 @@ class Utils {
      *
      * This method checks if the file exists and that headers have not been sent before proceeding
      * with the file download. It sends appropriate headers to the client to force a file download,
-     * then reads the file and streams it to the browser. If the `$delete` flag is set to true, 
+     * then reads the file and streams it to the browser. If the `$delete` flag is set to true,
      * the file will be deleted after the download.
      *
      * @param string $file The path to the file to be downloaded.
      * @param bool $delete Flag indicating whether the file should be deleted after download. Defaults to false
-     * 
+     *
      * @return bool Returns true if the file download was successful, false otherwise.
      */
     public static function downloadFile(string $file, bool $delete = false): bool {
@@ -1162,7 +1162,7 @@ class Utils {
      * @param string $name The name of the zip file to be created (without the `.zip` extension).
      * @param array $files An array of file paths to be included in the zip archive.
      * @param string $dirname The directory name where the zip file should be created.
-     * 
+     *
      * @return bool Returns `true` if the zip file is successfully created and downloaded, otherwise `false`.
      */
     public static function downloadFiles(string $name, array $files, string $dirname): bool {
@@ -1208,8 +1208,8 @@ class Utils {
      * @return int
      */
     public static function generateUniqueId(): int {
-        $uId = str_shuffle(mt_rand(100000, 999999) . self::unixTimestamp());
-        return substr($uId, 0, 10);
+        $uId = (string) str_shuffle(mt_rand(100000, 999999) . self::unixTimestamp());
+        return (int) substr($uId, 0, 10);
     }
 
     /**
@@ -1670,7 +1670,7 @@ class Utils {
     public static function replaceUrlParamValue(string $param, mixed $value): string {
         $currentUrl = \str_replace("\\", "/", self::completeCurrentUrl());
         $parts = parse_url($currentUrl);
-        $scheme = isset($parts['scheme']) ?  $parts['scheme'] : "";
+        $scheme = isset($parts['scheme']) ? $parts['scheme'] : "";
         $host = isset($parts['host']) ? $parts['host'] : "";
         $path =  isset($parts['path']) ? $parts['path'] : "";
         parse_str(isset($parts['query']) ? $parts['query'] : "", $params);
@@ -1678,7 +1678,7 @@ class Utils {
         $newParams = http_build_query($params);
         $path = str_replace(array("//", "\\\\", "\\",  "/\\", "\\/"), "/", $path);
         $path = !empty($path) ? (!Utils::startsWith("/", $path) ? "/" . $path : $path) : "";
-        return (!empty($scheme) && !empty($host) ? $scheme . '://' . $host  : "") . '' . $path . '?' . $newParams;
+        return (!empty($scheme) && !empty($host) ? $scheme . '://' . $host : "") . '' . $path . '?' . $newParams;
     }
 
     /**
@@ -1726,12 +1726,12 @@ class Utils {
     public static function currentPathURL(): string {
         $ccUrl = self::completeCurrentUrl();
         $parse = parse_url($ccUrl);
-        $scheme = isset($parts['scheme']) ?  $parts['scheme'] : "";
-        $host = isset($parts['host']) ? $parts['host'] : "";
+        $scheme = isset($parse['scheme']) ? $parse['scheme'] : "";
+        $host = isset($parse['host']) ? $parse['host'] : "";
         $path = Path::arrange_dir_separators($parse['path'], true);
         $path = str_replace(array("//", "\\\\", "\\",  "/\\", "\\/"), "/", $path);
         $path = !empty($path) ? (!Utils::startsWith("/", $path) ? "/" . $path : $path) : "";
-        return (!empty($scheme) && !empty($host) ? $scheme . '://' . $host  : "") . '' . $path;
+        return (!empty($scheme) && !empty($host) ? $scheme . '://' . $host : "") . '' . $path;
     }
 
     /**
@@ -1860,8 +1860,8 @@ class Utils {
     /**
      * Adds one or more IP addresses to the list of localhost default addresses.
      *
-     * This method accepts an array of IP addresses and appends them to the 
-     * `LOCALHOST_DEFAULT_ADDRESSES` static property. Each value in the input 
+     * This method accepts an array of IP addresses and appends them to the
+     * `LOCALHOST_DEFAULT_ADDRESSES` static property. Each value in the input
      * array is cast to a string before being added to ensure type consistency.
      *
      * @param array $lists An array of IP addresses to be added to the default list.
@@ -1878,8 +1878,8 @@ class Utils {
     /**
      * Adds one or more IP addresses to the list of private ip addresses.
      *
-     * This method accepts an array of IP addresses and appends them to the 
-     * `PRIVATE_IP_ADDRESS_RANGES` static property. Each value in the input 
+     * This method accepts an array of IP addresses and appends them to the
+     * `PRIVATE_IP_ADDRESS_RANGES` static property. Each value in the input
      * array is cast to a string before being added to ensure type consistency.
      *
      * @param array $lists An array of IP addresses to be added to the default list.
@@ -2055,7 +2055,7 @@ class Utils {
 
     /**
      * Calculate remaining time in days from the given UNIX timestamp.
-     * 
+     *
      * @param int $unix UNIX timestamp to calculate remaining time from.
      * @return int Remaining days until the given UNIX timestamp. Returns 0 if the timestamp is in the past.
      */
@@ -2069,7 +2069,7 @@ class Utils {
 
     /**
      * Calculate elapsed time in days since the given UNIX timestamp.
-     * 
+     *
      * @param int $unix UNIX timestamp to calculate elapsed time from.
      * @return int Elapsed days since the given UNIX timestamp. Returns 0 if the timestamp is in the future.
      */
@@ -2167,9 +2167,9 @@ class Utils {
 
     /**
      * Get the duration of an audio file.
-     * 
-     * This function checks if the given file is a valid audio file. It uses the 
-     * GetID3 library to analyze the file and retrieve its duration in seconds. 
+     *
+     * This function checks if the given file is a valid audio file. It uses the
+     * GetID3 library to analyze the file and retrieve its duration in seconds.
      * The duration is then formatted into a `H:i:s` format (hours:minutes:seconds).
      *
      * @param string $file The path to the audio file whose duration is to be retrieved.
@@ -2196,9 +2196,9 @@ class Utils {
 
     /**
      * Get the duration of a video file.
-     * 
-     * This function checks if the given file is a valid video file. It uses the 
-     * GetID3 library to analyze the file and retrieve its duration in seconds. 
+     *
+     * This function checks if the given file is a valid video file. It uses the
+     * GetID3 library to analyze the file and retrieve its duration in seconds.
      * The duration is then formatted into a `H:i:s` format (hours:minutes:seconds).
      *
      * @param string $file The path to the video file whose duration is to be retrieved.
@@ -2244,7 +2244,7 @@ class Utils {
 
     /**
      * Set audio metadata tags for a given audio file.
-     * 
+     *
      * This function sets metadata tags like title, artist, album, year, genre, and more
      * on an audio file (MP3, for example), including an attached cover image. It uses the
      * getID3 library to write the metadata to the audio file.
@@ -2435,10 +2435,11 @@ class Utils {
     /**
      * Debug trace
      * @param string $message
-     * @return type
+     * @return string
      */
-    public static function debugTrace(string $message) {
-        $trace = array_shift(debug_backtrace());
+    public static function debugTrace(string $message): string {
+        $backtrace = debug_backtrace();
+        $trace = array_shift($backtrace);
         return die($trace["file"] . ": Line " . $trace["line"] . ": " . $message);
     }
 
@@ -2942,7 +2943,6 @@ class Utils {
                 return "The filename must be a valid and readable.";
             }
         }
-        return false;
     }
 
     /**
@@ -3538,8 +3538,8 @@ class Utils {
     /**
      * Custom error handler.
      *
-     * This method handles PHP errors, including user-defined errors, warnings, 
-     * and notices. It determines if the error is within the current error reporting level, 
+     * This method handles PHP errors, including user-defined errors, warnings,
+     * and notices. It determines if the error is within the current error reporting level,
      * formats the error message, and optionally terminates execution for fatal errors.
      *
      * @param int    $errno      The level of the error raised (e.g., E_USER_ERROR, E_USER_WARNING).
@@ -3548,7 +3548,7 @@ class Utils {
      * @param string $errline    The line number where the error occurred.
      * @param array  $errcontext The active symbol table at the time the error occurred (deprecated in PHP 7.2+).
      *
-     * @return bool False if the error is not handled by this method, allowing it to fall 
+     * @return bool False if the error is not handled by this method, allowing it to fall
      *              through to the standard PHP error handler; true otherwise.
      */
     private function errorHandler(int $errno, string $errstr, string $errfile, string $errline, array $errcontext): bool {
@@ -3699,7 +3699,7 @@ class Utils {
      *
      * @param int $a The first integer to compare.
      * @param int $b The second integer to compare.
-     * 
+     *
      * @return bool `true` if the integers are different, `false` otherwise.
      */
     public static function notSameInt(int $a, int $b): bool {

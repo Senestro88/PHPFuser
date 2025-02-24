@@ -639,7 +639,7 @@ class Image {
             // Get the output path for the resized image.
             $output = self::getOutputPath($image, $replace);
             // Apply the resizing fit and save the image.
-            $loader->fit($fit->value(), $width, $height, $background)->save($output);
+            $loader->fit($fit->value(), $width, $height, true, $background)->save($output);
             // Return true if the output file exists.
             return File::isFile($output);
         }

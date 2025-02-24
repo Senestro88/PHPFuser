@@ -661,7 +661,6 @@ class File {
         } else {
             return @mkdir($dir, Utils::DIRECTORY_PERMISSION, true);
         }
-        return false;
     }
 
     /**

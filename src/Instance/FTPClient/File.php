@@ -2,8 +2,9 @@
 
 namespace PHPFuser\Instance\FTPClient;
 
-use \PHPFuser\Utils;
-use \PHPFuser\Path;
+use PHPFuser\Utils;
+use PHPFuser\Path;
+use PHPFuser\File as FFile;
 
 /**
  * @author Senestro
@@ -94,7 +95,7 @@ class File {
      * @return string
      */
     public function getName(): string {
-        return File::removeExtension($this->getBasename());
+        return FFile::removeExtension($this->getBasename());
     }
 
     /**
@@ -102,7 +103,7 @@ class File {
      * @return string
      */
     public function getExtension(): string {
-        return File::getExtension($this->getBasename());
+        return FFile::getExtension($this->getBasename());
     }
 
     /**
@@ -110,7 +111,7 @@ class File {
      * @return string
      */
     public function removeExtension(): string {
-        return File::removeExtension($this->getRealPath());
+        return FFile::removeExtension($this->getRealPath());
     }
 
     /**

@@ -12,13 +12,10 @@ trait ImageBorderTypeTrait {
         switch ($this->value) {
             case 'expand':
                 return SpatieBorderType::Expand;
-                break;
             case 'overlay':
                 return SpatieBorderType::Overlay;
-                break;
             default:
                 return SpatieBorderType::Shrink;
-                break;
         }
     }
 }
