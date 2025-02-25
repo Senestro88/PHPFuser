@@ -2,9 +2,9 @@
 
 namespace PHPFuser;
 
-use \PHPFuser\Utils;
-use \PHPFuser\File;
-use \PHPFuser\Path;
+use PHPFuser\Utils;
+use PHPFuser\File;
+use PHPFuser\Path;
 use React\Stream\Util;
 
 /**
@@ -472,7 +472,7 @@ class Captcha {
      * Draw a single line on the image using sine wave transformations.
      *
      * This method creates a line on the provided GD image resource by iterating over
-     * the specified number of points (`n`) and applying sine wave transformations to 
+     * the specified number of points (`n`) and applying sine wave transformations to
      * calculate the position of each point. The line is drawn as small rectangles
      * (pixels or blocks) with the specified line width (`lwid`) and color (`lineColor`).
      *
@@ -534,7 +534,7 @@ class Captcha {
      * @param string $text
      * @return array
      */
-    private static function boundingBoxDetails(float $size = 15, float $angle = 0, string $font, string $text = ""): array {
+    private static function boundingBoxDetails(float $size = 15, float $angle = 0, string $font = "", string $text = ""): array {
         $bbox = @imagettfbbox($size, $angle, $font, $text);
         $data = array();
         if (Utils::isNotFalse($bbox)) {
