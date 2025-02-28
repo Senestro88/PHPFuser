@@ -11,7 +11,14 @@ use DeviceDetector\Parser\Device\AbstractDeviceParser;
 use PHPFuser\Utils;
 
 class CustomDeviceDetector {
+    /**
+     * @var string The ip address
+     */
     private string $ip = "";
+
+    /**
+     * @var DeviceDetector The device detector
+     */
     private DeviceDetector $deviceDetector;
 
     public function __construct() {
@@ -23,29 +30,44 @@ class CustomDeviceDetector {
         $this->deviceDetector->parse();
     }
 
-    public function getBrowser() {
+    /**
+     * Get the browser name
+     */
+    public function getBrowser(): string {
         // Get browser name
         $clientInfo = $this->deviceDetector->getClient(); // Contains browser details
         return $clientInfo['name'] ?? 'Unknown';
     }
 
-    public function getDevice() {
+    /**
+     * Get he device name
+     */
+    public function getDevice(): string {
         // Get device name
         return $this->deviceDetector->getDeviceName() ?? 'Unknown';
     }
 
-    public function getDeviceOsName() {
+    /**
+     * Get the device operating system name
+     */
+    public function getDeviceOsName(): string {
         // Get operating system name
         $osInfo = $this->deviceDetector->getOs(); // Contains OS details
         return $osInfo['name'] ?? 'Unknown';
     }
 
-    public function getDeviceBrand() {
+    /**
+     * Get the device brand
+     */
+    public function getDeviceBrand(): string {
         // Get device brand
         return $this->deviceDetector->getBrandName() ?? 'Unknown';
     }
 
-    public function getIPInfo() {
+    /**
+     * Get the ip address information
+     */
+    public function getIPInfo(): array {
         // Get IP address info
         $info = array();
         try {
@@ -62,18 +84,30 @@ class CustomDeviceDetector {
         return $info;
     }
 
+    /**
+     * Determine if the device is mobile
+     */
     public function isMobile() {
         return $this->deviceDetector->isMobile();
     }
 
+    /**
+     * Determine if the device is tablet
+     */
     public function isTablet() {
         return $this->deviceDetector->isTablet();
     }
 
+    /**
+     * Determine if the device is smartphone
+     */
     public function isSmartphone() {
         return $this->deviceDetector->isSmartphone();
     }
 
+    /**
+     * Determine if the device is desktop
+     */
     public function isDesktop() {
         return $this->deviceDetector->isDesktop();
     }

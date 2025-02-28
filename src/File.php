@@ -108,12 +108,12 @@ class File {
     /**
      * Saves the provided content to a file. Optionally, appends the content
      * and adds a newline before the content if specified.
-     * 
+     *
      * @param string $file    The path to the file where the content will be saved.
      * @param string $content The content to be written to the file.
      * @param bool   $append  Whether to append the content to the file. Defaults to false.
      * @param bool   $newline Whether to add a newline before the content if appending. Defaults to false.
-     * 
+     *
      * @return bool Returns true if the content was successfully written, false otherwise.
      */
     public static function saveContentToFile(string $file, string $content, bool $append = false, bool $newline = false): bool {
@@ -150,9 +150,9 @@ class File {
     /**
      * Reads the content of a file and returns it as a string. The file is read in binary mode,
      * and the content is read in chunks to avoid memory issues with large files.
-     * 
+     *
      * @param string $file The path to the file to be read.
-     * 
+     *
      * @return string The content of the file, or an empty string if the file cannot be read.
      */
     public static function getFileContent(string $file): string {
@@ -185,10 +185,10 @@ class File {
 
     /**
      * Writes content to a file handle in chunks.
-     * 
+     *
      * @param mixed $handle The file handle.
      * @param string $content The content to be written to the file.
-     * 
+     *
      * @return bool Returns true if content was successfully written, false if there was an error.
      */
     public static function writeContentToHandle(mixed $handle, string $content): bool {
@@ -830,11 +830,11 @@ class File {
 
     /**
      * Locks a file for reading or writing to prevent concurrent access.
-     * 
+     *
      * @param mixed $handle The stream handle to the file that needs to be locked.
      * @param bool  $reading Whether the lock should be for reading (`LOCK_SH`) or writing (`LOCK_EX`).
      * @param bool  $wait Whether to block the operation and wait for the lock to be acquired (`true`), or return immediately if the lock cannot be acquired (`false`).
-     * 
+     *
      * @return bool Returns `true` if the file was successfully locked, `false` otherwise.
      */
     public static function lockFile(mixed $handle, bool $reading = true, bool $wait = false): bool {
@@ -846,9 +846,9 @@ class File {
 
     /**
      * Unlocks a previously locked file.
-     * 
+     *
      * @param mixed $handle The stream handle to the file that needs to be unlocked.
-     * 
+     *
      * @return bool Returns `true` if the file was successfully unlocked, `false` otherwise.
      */
     public static function unlockFile(mixed $handle): bool {
@@ -856,4 +856,20 @@ class File {
         return \is_resource($handle) && \flock($handle, LOCK_UN);
     }
 
+    /**
+     * Delete empty directories from the base directory
+     * 
+     * @param string $baseDir The base directory
+     * @param bool $recursively Wether to search recursively
+     */
+    public static function deleteEmptyDirs(string $baseDir, bool $recursively = false): void {
+        if (self::isDir($baseDir) && Utils::isReadable($baseDir)) {
+            $files = $recursively ? self::scanDirRecursively($baseDir) : self::scanDir($baseDir);
+            foreach ($files as $file) {
+                if (self::isDir($file) && self::isEmptyDir($file)) {
+                    self::deleteDir($file);
+                }
+            }
+        }
+    }
 }

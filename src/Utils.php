@@ -3144,7 +3144,7 @@ class Utils {
         $name = self::isNotEmptyString($extension) && strtolower($extension) == "php" ? $plugin : $plugin . '.php';
         $plugin = $dirname . '' . $name;
         if (File::isFile($plugin)) {
-            require_once $plugin;
+            require_once $plugin; 
         } else {
             throw new \Exception("The plugin \"" . $plugin . "\" doesn't exist.");
         }

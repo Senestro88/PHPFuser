@@ -9,14 +9,12 @@ class Bridge {
     /* PRIVATE VARIABLES */
 
     /**
-     * The connection stream
-     * @var \FTP\Connection
+     * @var \FTP\Connection The connection stream
      */
     private \FTP\Connection $connection;
 
     /**
-     * Error message are stored here
-     * @var string|null
+     * @var string|null Error message are stored here
      */
     private ?string $errorMessage = null;
 

@@ -11,34 +11,29 @@ class Session {
     // PRIVATE VARIABLES
 
     /**
-     * Same-site policy for the session cookie
-     * @var string
+     * @var string Same-site policy for the session cookie
      */
     private string $sameSite = "Lax";
 
     /**
-     * HTTP-only flag for the session cookie
-     * @var bool
+     * @var bool HTTP-only flag for the session cookie
      */
     private bool $httpOnly = true;
 
     /**
-     * Path for the session cookie
-     * @var string
+     * @var string Path for the session cookie
      */
     private string $path = "/";
 
     /**
-     * Domain for the session cookie
-     * @var string
+     * @var string Domain for the session cookie
      */
     private string $domain;
 
     // PUBLIC VARIABLES
 
     /**
-     * Maximum days for the session to expire and reset
-     * @var int
+     * @var int Maximum days for the session to expire and reset
      */
     public int $maxDays = 7;
 

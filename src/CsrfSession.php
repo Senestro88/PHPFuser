@@ -11,11 +11,25 @@ use \PHPFuser\Exception\Session;
  */
 class CsrfSession {
     // Private constants
-    private static $name = "X-SESS-CSRF-TOKEN";
-    private static $csrfKey = "0914843909148439";
-    private static $errorMessage = "";
 
-    // Prevent the constructor from being initialized
+    /**
+     * @var string The name of the seesion
+     */
+    private static string $name = "X-SESS-CSRF-TOKEN";
+
+    /**
+     * @var string The session key
+     */
+    private static string $csrfKey = "0914843909148439";
+
+    /**
+     * @var string The last error message
+     */
+    private static string $errorMessage = "";
+
+    /**
+     * Prevent the constructor from being initialized
+     */
     private function __construct() {
     }
 

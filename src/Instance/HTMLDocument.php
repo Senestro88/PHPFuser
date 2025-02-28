@@ -4,15 +4,9 @@ namespace PHPFuser\Instance;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use HeimrichHannot\PdfCreator\Concrete\DompdfCreator;
-use HeimrichHannot\PdfCreator\Concrete\MpdfCreator;
-use HeimrichHannot\PdfCreator\PdfCreatorFactory;
-use Mpdf\Mpdf;
 use PHPFuser\File;
 use PHPFuser\Path;
 use \PHPFuser\Utils;
-use TCPDF;
-
 /**
  * HTMLDocument class
  *

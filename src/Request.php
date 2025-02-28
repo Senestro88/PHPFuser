@@ -18,28 +18,59 @@ class Request {
     private function __construct() {
     }
 
-    public static function get($url, $params = array(), $headers = array()): string {
+    /**
+     * Make a GET request
+     * 
+     * @param string $url The url to make the GET request
+     * @param array $params The request parameters
+     * @param array $headers The request headers
+     * @return string
+     */
+    public static function get(string $url, array $params = array(), array $headers = array()): string {
         $client = HttpClient::create(array('verify_peer' => false, 'cafile' => ''));
         $exploded = explode("?", $url);
         $response = $client->request('GET', $exploded[0], array('query' => $params, 'headers' => $headers));
         return $response->getContent(false);
     }
 
-    public static function post($url, $params = array(), $headers = array()): string {
+    /**
+     * Make a POST request
+     * 
+     * @param string $url The url to make the POST request
+     * @param array $params The request parameters
+     * @param array $headers The request headers
+     * @return string
+     */
+    public static function post(string $url, array $params = array(), array $headers = array()): string {
         $client = HttpClient::create(array('verify_peer' => false, 'cafile' => ''));
         $exploded = explode("?", $url);
         $response = $client->request('POST', $exploded[0], array('body' => $params, 'headers' => $headers));
         return $response->getContent(false);
     }
 
-    public static function upload($url, $params = array(), $headers = array()): string {
+    /**
+     * Make a POST request with multipart support
+     * 
+     * @param string $url The url to make the POST request
+     * @param array $params The request parameters
+     * @param array $headers The request headers
+     * @return string
+     */
+    public static function upload(string $url, array $params = array(), array $headers = array()): string {
         $client = HttpClient::create(array('verify_peer' => false, 'cafile' => ''));
         $exploded = explode("?", $url);
         $response = $client->request('POST', $exploded[0], array('multipart' => Request::setMultipart($params), 'headers' => $headers));
         return $response->getContent(false);
     }
 
-    public static function head($url, $headers = array()): array {
+    /**
+     * Make a HEAD request
+     * 
+     * @param string $url The url to make the HEAD request
+     * @param array $headers The request headers
+     * @return array
+     */
+    public static function head(string $url, array $headers = array()): array {
         $client = HttpClient::create(array('verify_peer' => false, 'cafile' => ''));
         $exploded = explode("?", $url);
         $response = $client->request('HEAD', $exploded[0], array('headers' => $headers));
@@ -47,7 +78,14 @@ class Request {
     }
 
     // PRIVATE METHODS
-    private static function setMultipart($params = array()): array {
+
+    /**
+     * Sets the multipart for upload request 
+     * 
+     * @param array $params The request parameters
+     * @return array
+     */
+    private static function setMultipart(array $params = array()): array {
         $multipart = array();
         foreach ($params as $key => $value) {
             if (File::isFile($value)) {

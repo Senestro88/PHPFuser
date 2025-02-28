@@ -9,56 +9,46 @@ use PHPFuser\Path;
 /**
  * @author Senestro
  */
-class FTPClient
-{
+class FTPClient {
     /* PUBLIC VARIABLES */
 
     /**
-     * Logs array
-     * @var array
+     * @var array Logs array
      */
     public $logs = array();
 
     /**
-     * The host to connect to
-     * @var string
+     * @var string The host to connect to
      */
     private $host = "";
 
     /**
-     * The connection port
-     * @var int
+     * @var int The connection port
      */
     private $port = 21;
 
     /**
-     * The connection timeout
-     * @var int
+     * @var int The connection timeout
      */
     private $timeout = 90;
 
     /**
-     * The username for login when connected
-     * @var string
+     * @var string The username for login when connected
      */
     private $username = "";
 
     /**
-     * The password for login when connected
-     * @var string
+     * @var string The password for login when connected
      */
     private $password = "";
 
     /**
-     * The remote system type
-     * @var string
+     * @var string The remote system type
      */
     private $rst = "unix";
-    /* PRIVATE VARIABLES */
 
     /**
-     * The remote directory separator
-     * @var string
+     * @var string The remote directory separator
      */
     private string $rds = "/";
 
@@ -78,11 +68,10 @@ class FTPClient
      * TConstruct a new FTPClient instance
      * @throws \PHPFuser\Exception\Exception
      */
-    public function __construct()
-    {
+    public function __construct() {
         $this->connection = null;
         $this->bridge = null;
-        if(!extension_loaded('ftp')) {
+        if (!extension_loaded('ftp')) {
             throw new \PHPFuser\Exception\Exception('FTP extension is not loaded!');
         }
     }
@@ -90,8 +79,7 @@ class FTPClient
     /**
      * This closes the connection
      */
-    public function __destruct()
-    {
+    public function __destruct() {
         $this->disconnect();
     }
 
@@ -102,8 +90,7 @@ class FTPClient
      * @param int $timeout
      * @return bool
      */
-    public function connect(string $host, int $port = 21, int $timeout = 90): bool
-    {
+    public function connect(string $host, int $port = 21, int $timeout = 90): bool {
         return $this->FTPConnect($host, false, $port, $timeout);
     }
 
@@ -114,8 +101,7 @@ class FTPClient
      * @param int $timeout
      * @return bool
      */
-    public function sslConnect(string $host, int $port = 21, int $timeout = 90): bool
-    {
+    public function sslConnect(string $host, int $port = 21, int $timeout = 90): bool {
         return $this->FTPConnect($host, true, $port, $timeout);
     }
 
@@ -126,15 +112,14 @@ class FTPClient
      * @param bool $enablePassiveMode True to enable passive mode
      * @return bool
      */
-    public function login(string $username, string $password, bool $enablePassiveMode = true): bool
-    {
-        if($this->isValid()) {
-            if($this->FTPLogin($username, $password) && $this->enablePassiveMode($enablePassiveMode)) {
+    public function login(string $username, string $password, bool $enablePassiveMode = true): bool {
+        if ($this->isValid()) {
+            if ($this->FTPLogin($username, $password) && $this->enablePassiveMode($enablePassiveMode)) {
                 $this->username = $username;
                 $this->password = $password;
                 // Get and set the remote system type
                 $systype = $this->bridge->systype();
-                if(is_string($systype)) {
+                if (is_string($systype)) {
                     $systype = strtolower($systype);
                     $this->rst = $systype;
                 }
@@ -152,8 +137,7 @@ class FTPClient
      * @param bool $enable
      * @return bool
      */
-    public function enablePassiveMode(bool $enable = true): bool
-    {
+    public function enablePassiveMode(bool $enable = true): bool {
         return $this->isValid() ? $this->bridge->pasv($enable) : false;
     }
 
@@ -161,15 +145,14 @@ class FTPClient
      * Disconnected the FTP connection
      * @return void
      */
-    public function disconnect(): void
-    {
-        if($this->isValid()) {
+    public function disconnect(): void {
+        if ($this->isValid()) {
             try {
                 $this->bridge->close();
                 $this->bridge = null;
                 $this->connection = null;
                 $this->log("Successfully disconnected.");
-            } catch(\Throwable $e) {
+            } catch (\Throwable $e) {
                 $this->log($e->getMessage(), "error");
             }
         }
@@ -183,25 +166,24 @@ class FTPClient
      * @return array
      * @throws \PHPFuser\Exception\Exception
      */
-    public function raw(string $command): array
-    {
-        if($this->isValid()) {
+    public function raw(string $command): array {
+        if ($this->isValid()) {
             $command = trim($command);
-            if(!$raw = $this->bridge->raw($command)) {
+            if (!$raw = $this->bridge->raw($command)) {
                 throw new \Exception("Failed to send the command [{$command}] to the server.");
             }
             $code = $message = $body = $endmessage = null;
             // Get the response code
-            if(preg_match('/^\d+/', $raw[0], $matches) !== false) {
+            if (preg_match('/^\d+/', $raw[0], $matches) !== false) {
                 $code = (int) $matches[0];
             }
             // Get the message
-            if(preg_match('/[A-z ]+.*/', $raw[0], $matches) !== false) {
+            if (preg_match('/[A-z ]+.*/', $raw[0], $matches) !== false) {
                 $message = $matches[0];
             }
             // If the response is multiline response then search for the body and the endmessage
             $count = count($raw);
-            if($count > 1) {
+            if ($count > 1) {
                 $body = array_slice($raw, 1, -1);
                 $endmessage = $raw[$count - 1];
             }
@@ -214,11 +196,10 @@ class FTPClient
      * Get the current working directory name
      * @return string | null
      */
-    public function getCurrentDir(): ?string
-    {
-        if($this->isValid()) {
+    public function getCurrentDir(): ?string {
+        if ($this->isValid()) {
             $dir = $this->bridge->pwd();
-            if(is_string($dir)) {
+            if (is_string($dir)) {
                 return $dir;
             } else {
                 $this->log("Failed to retrieve the current working directory name.", "error");
@@ -232,10 +213,9 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function changeDir(string $dir): bool
-    {
-        if($this->isValid()) {
-            if(!$this->bridge->chdir($this->arrangeRDS($dir))) {
+    public function changeDir(string $dir): bool {
+        if ($this->isValid()) {
+            if (!$this->bridge->chdir($this->arrangeRDS($dir))) {
                 $this->log("Failed to change the working directory to: {$dir}", "error");
                 return false;
             }
@@ -248,8 +228,7 @@ class FTPClient
      * Change to the parent directory
      * @return bool
      */
-    public function upDir(): bool
-    {
+    public function upDir(): bool {
         return $this->isValid() ? $this->bridge->cdup() : false;
     }
 
@@ -258,13 +237,12 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function isDir(string $dir): bool
-    {
-        if($this->isValid()) {
+    public function isDir(string $dir): bool {
+        if ($this->isValid()) {
             // Get the current directory
             $current = $this->getCurrentDir();
             // Try to change to the directory
-            if(\is_string($current) && $this->changeDir($dir)) {
+            if (\is_string($current) && $this->changeDir($dir)) {
                 // It's a directory, change back to the original directory
                 $this->raw("CWD " . $current);
                 return true;
@@ -278,9 +256,8 @@ class FTPClient
      * @param string $file
      * @return bool
      */
-    public function isFile(string $file): bool
-    {
-        if($this->isValid()) {
+    public function isFile(string $file): bool {
+        if ($this->isValid()) {
             $size = $this->bridge->size($this->arrangeRDS($file));
             return $size != -1;
         }
@@ -292,22 +269,21 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function cleanDir(string $dir): bool
-    {
-        if($this->isValid() && $this->isDir($dir)) {
+    public function cleanDir(string $dir): bool {
+        if ($this->isValid() && $this->isDir($dir)) {
             $dir = $this->arrangeRDS($dir); // Arrange the path
             $files = $this->sortFilesFirstForList($this->list($dir, true, true));
-            foreach($files as $info) {
+            foreach ($files as $info) {
                 $realpath = $info->getRealPath();
-                if($this->isFile($realpath)) {
+                if ($this->isFile($realpath)) {
                     // Delete file
-                    if(!$this->bridge->delete($realpath)) {
+                    if (!$this->bridge->delete($realpath)) {
                         $this->log("Failed to clean the directory \"{$dir}\", unable to delete the file \"{$realpath}\"", "error");
                         return false;
                     }
-                } elseif($this->isDir($realpath)) {
+                } elseif ($this->isDir($realpath)) {
                     // Delete directory
-                    if(!$this->bridge->rmdir($realpath)) {
+                    if (!$this->bridge->rmdir($realpath)) {
                         $this->log("Failed to clean the directory \"{$dir}\", unable to delete the directory \"{$realpath}\"", "error");
                         return false;
                     }
@@ -323,11 +299,10 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function deleteDir(string $dir): bool
-    {
-        if($this->isValid()) {
-            if($this->cleanDir($dir)) {
-                if(!$this->bridge->rmdir($this->arrangeRDS($dir))) {
+    public function deleteDir(string $dir): bool {
+        if ($this->isValid()) {
+            if ($this->cleanDir($dir)) {
+                if (!$this->bridge->rmdir($this->arrangeRDS($dir))) {
                     $this->log("Failed to delete the directory \"{$dir}\"", "error");
                     return false;
                 }
@@ -345,40 +320,39 @@ class FTPClient
      * @param bool $asc
      * @return array
      */
-    public function list(string $dir, bool $recursive = false, bool $showHidden = false, bool $asc = true): array
-    {
+    public function list(string $dir, bool $recursive = false, bool $showHidden = false, bool $asc = true): array {
         $list = array();
-        if($this->isValid()) {
+        if ($this->isValid()) {
             $dir = $this->arrangeRDS($dir);
             // Retrieve the raw list of directory contents
             $lines = $this->bridge->rawlist($dir);
             // Ensure the raw list is an array
-            if(is_array($lines)) {
-                foreach($lines as $line) {
+            if (is_array($lines)) {
+                foreach ($lines as $line) {
                     $info = new \PHPFuser\Instance\FTPClient\File($this, $dir, $line);
                     $list[$info->getKey()] = $info;
                     // Recursively list directory contents if recursive is true
-                    if($recursive && $info->isDir()) {
-                        foreach($this->list($info->getRealPath()) as $lk => $li) {
+                    if ($recursive && $info->isDir()) {
+                        foreach ($this->list($info->getRealPath()) as $lk => $li) {
                             $list[$lk] = $li;
                         }
                     }
                 }
             }
         }
-        if(!empty($list)) {
+        if (!empty($list)) {
             // Loop to remove hidden when list hideen is false
-            if(!$showHidden) {
-                foreach($list as $lk => $li) {
-                    if(Utils::startsWith(".", $li->getBasename())) {
+            if (!$showHidden) {
+                foreach ($list as $lk => $li) {
+                    if (Utils::startsWith(".", $li->getBasename())) {
                         unset($list[$lk]);
                     }
                 }
             }
             // Sort the list in ascending or descending order
-            if($asc && function_exists('ksort ')) {
+            if ($asc && function_exists('ksort ')) {
                 ksort($list);
-            } elseif(!$asc && function_exists('krsort ')) {
+            } elseif (!$asc && function_exists('krsort ')) {
                 krsort($list);
             }
         }
@@ -394,12 +368,11 @@ class FTPClient
      * @param string|null $type
      * @return int
      */
-    public function countItems(string $dir, bool $recursive = false, bool $includeHidden = true, ?string $type = null): int
-    {
+    public function countItems(string $dir, bool $recursive = false, bool $includeHidden = true, ?string $type = null): int {
         $list = $this->list($dir, $recursive, $includeHidden);
         $count = 0;
-        foreach($list as $info) {
-            if($type === null || $info->getType() == $type) {
+        foreach ($list as $info) {
+            if ($type === null || $info->getType() == $type) {
                 $count++;
             }
         }
@@ -413,8 +386,7 @@ class FTPClient
      * @param bool $includeHidden
      * @return int
      */
-    public function countDirectories(string $dir, bool $recursive = false, bool $includeHidden = true): int
-    {
+    public function countDirectories(string $dir, bool $recursive = false, bool $includeHidden = true): int {
         return $this->countItems($dir, $recursive, $includeHidden, "directory");
     }
 
@@ -425,8 +397,7 @@ class FTPClient
      * @param bool $includeHidden
      * @return int
      */
-    public function countFiles(string $dir, bool $recursive = false, bool $includeHidden = true): int
-    {
+    public function countFiles(string $dir, bool $recursive = false, bool $includeHidden = true): int {
         return $this->countItems($dir, $recursive, $includeHidden, "file");
     }
 
@@ -437,8 +408,7 @@ class FTPClient
      * @param bool $includeHidden
      * @return int
      */
-    public function countLinks(string $dir, bool $recursive = false, bool $includeHidden = true): int
-    {
+    public function countLinks(string $dir, bool $recursive = false, bool $includeHidden = true): int {
         return $this->countItems($dir, $recursive, $includeHidden, "link");
     }
 
@@ -449,8 +419,7 @@ class FTPClient
      * @param bool $includeHidden
      * @return int
      */
-    public function countUnknown(string $dir, bool $recursive = false, bool $includeHidden = true): int
-    {
+    public function countUnknown(string $dir, bool $recursive = false, bool $includeHidden = true): int {
         return $this->countItems($dir, $recursive, $includeHidden, "unknown");
     }
 
@@ -459,8 +428,7 @@ class FTPClient
      * @param string $file
      * @return bool
      */
-    public function isDirEmpty(string $file): bool
-    {
+    public function isDirEmpty(string $file): bool {
         return $this->countItems($file, false, true) < 1;
     }
 
@@ -468,8 +436,7 @@ class FTPClient
      * Get all the logs
      * @return array
      */
-    public function getLogs(): array
-    {
+    public function getLogs(): array {
         return $this->logs;
     }
 
@@ -478,8 +445,7 @@ class FTPClient
      * @param string $command
      * @return bool
      */
-    public function exec(string $command): bool
-    {
+    public function exec(string $command): bool {
         return $this->isValid() ? $this->bridge->exec($command) : false;
     }
 
@@ -488,8 +454,7 @@ class FTPClient
      * @param string $command
      * @return bool
      */
-    public function site(string $command): bool
-    {
+    public function site(string $command): bool {
         return $this->isValid() ? $this->bridge->site($command) : false;
     }
 
@@ -497,8 +462,7 @@ class FTPClient
      * Get the help information of the remote FTP server.
      * @return array
      */
-    public function help(): array
-    {
+    public function help(): array {
         return $this->raw('help');
     }
 
@@ -507,10 +471,9 @@ class FTPClient
      * @param string $file
      * @return bool
      */
-    public function deleteFile(string $file): bool
-    {
-        if($this->isValid() && $this->isFile($file)) {
-            if(!$this->bridge->delete($this->arrangeRDS($file))) {
+    public function deleteFile(string $file): bool {
+        if ($this->isValid() && $this->isFile($file)) {
+            if (!$this->bridge->delete($this->arrangeRDS($file))) {
                 $this->log("Failed to delete the file \"{$file}\"", "error");
                 return false;
             }
@@ -525,11 +488,10 @@ class FTPClient
      * @param string|null $format
      * @return int|string
      */
-    public function lastModifiedTime(string $file, ?string $format = null): int|string
-    {
-        if($this->isValid() && $this->isFile($file)) {
+    public function lastModifiedTime(string $file, ?string $format = null): int|string {
+        if ($this->isValid() && $this->isFile($file)) {
             $time = $this->bridge->mdtm($this->arrangeRDS($file));
-            if($time != -1) {
+            if ($time != -1) {
                 return is_string($format) && Utils::isNotEmptyString($format) ? date($format, $time) : $time;
             }
         }
@@ -541,12 +503,11 @@ class FTPClient
      * @param string $dir
      * @return int
      */
-    public function dirSize(string $dir): int
-    {
+    public function dirSize(string $dir): int {
         $lists = $this->list($dir, true, true);
         $size = 0;
-        foreach($lists as $info) {
-            if(!$info->isDir()) {
+        foreach ($lists as $info) {
+            if (!$info->isDir()) {
                 $size += (int) $info->getSize();
             }
         }
@@ -559,11 +520,10 @@ class FTPClient
      * @param bool $format
      * @return int
      */
-    public function getSize(string $file, bool $format = false): int|string
-    {
-        if($this->isValid() && $this->isFile($file)) {
+    public function getSize(string $file, bool $format = false): int|string {
+        if ($this->isValid() && $this->isFile($file)) {
             $size = $this->bridge->size($this->arrangeRDS($file));
-            if($size != -1) {
+            if ($size != -1) {
                 return $format ? Utils::formatSize((int) $size) : $size;
             }
         }
@@ -576,8 +536,7 @@ class FTPClient
      * @param string $to
      * @return bool
      */
-    public function rename(string $from, string $to): bool
-    {
+    public function rename(string $from, string $to): bool {
         return $this->isValid() ? $this->bridge->rename($this->arrangeRDS($from), $this->arrangeRDS($to)) : false;
     }
 
@@ -587,8 +546,7 @@ class FTPClient
      * @param string $to
      * @return bool
      */
-    public function move(string $from, string $to): bool
-    {
+    public function move(string $from, string $to): bool {
         return $this->rename($from, $to);
     }
 
@@ -598,8 +556,7 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function moveInto(string $source, string $dir): bool
-    {
+    public function moveInto(string $source, string $dir): bool {
         return $this->rename($source, $this->arrangeRDS(Path::merge($dir, basename($source))));
     }
 
@@ -607,8 +564,7 @@ class FTPClient
      * Sends a request to the server to keep the control channel alive and prevent the server from disconnecting the session.
      * @return bool
      */
-    public function requestKeepAlive(): bool
-    {
+    public function requestKeepAlive(): bool {
         return (bool) $this->raw("NOOP")['success'];
     }
 
@@ -617,8 +573,7 @@ class FTPClient
      * @param int $bytes
      * @return bool
      */
-    public function allocateSpace(int $bytes): bool
-    {
+    public function allocateSpace(int $bytes): bool {
         return $this->isValid() ? $this->bridge->alloc($bytes) : false;
     }
 
@@ -629,13 +584,12 @@ class FTPClient
      * @param int $offset
      * @return string
      */
-    public function getContent(string $file, int $mode = FTP_BINARY, int $offset = 0): string
-    {
-        if($this->isValid() && $this->isFile($file)) {
+    public function getContent(string $file, int $mode = FTP_BINARY, int $offset = 0): string {
+        if ($this->isValid() && $this->isFile($file)) {
             $file = $this->arrangeRDS($file);
             $temp = tempnam(sys_get_temp_dir(), $file);
             $content = $this->bridge->get($temp, $file, $mode, $offset);
-            if($content === true) {
+            if ($content === true) {
                 try {
                     return @file_get_contents($temp);
                 } finally {
@@ -653,13 +607,12 @@ class FTPClient
      * @param int $mode
      * @return bool
      */
-    public function createFile(string $file, ?string $content = null, int $mode = FTP_BINARY): bool
-    {
-        if($this->isValid() && !$this->isFile($file)) {
+    public function createFile(string $file, ?string $content = null, int $mode = FTP_BINARY): bool {
+        if ($this->isValid() && !$this->isFile($file)) {
             $file = $this->arrangeRDS($file);
             $handle = @fopen('php://temp', 'w');
-            if(!is_bool($handle)) {
-                if(Utils::isNonNull($content) && Utils::isNotEmptyString($content)) {
+            if (!is_bool($handle)) {
+                if (Utils::isNonNull($content) && Utils::isNotEmptyString($content)) {
                     // Write the content to the temporary file
                     fwrite($handle, $content);
                 }
@@ -682,13 +635,12 @@ class FTPClient
      * @param int $mode
      * @return bool
      */
-    public function saveContent(string $file, string $content, int $mode = FTP_BINARY): bool
-    {
-        if($this->isValid() && $this->isFile($file)) {
+    public function saveContent(string $file, string $content, int $mode = FTP_BINARY): bool {
+        if ($this->isValid() && $this->isFile($file)) {
             $file = $this->arrangeRDS($file);
             // Open a temporary stream for writing
             $handle = @fopen('php://temp', 'w');
-            if(!is_bool($handle)) {
+            if (!is_bool($handle)) {
                 // Write the content to the temporary file
                 fwrite($handle, $content);
                 // Rewind the pointer of the temporary file
@@ -708,16 +660,15 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function createDir(string $dir): bool
-    {
-        if($this->isValid()) {
-            if($this->isDir($dir)) {
+    public function createDir(string $dir): bool {
+        if ($this->isValid()) {
+            if ($this->isDir($dir)) {
                 return true;
             } else {
                 $cd = $this->getCurrentDir();
                 $parts = array_filter(explode("/", $this->arrangeRDS($dir)));
-                foreach($parts as $part) {
-                    if(!$this->bridge->chdir($part)) {
+                foreach ($parts as $part) {
+                    if (!$this->bridge->chdir($part)) {
                         $this->bridge->mkdir($part);
                         $this->bridge->chmod(0775, $part);
                         $this->bridge->chdir($part);
@@ -739,10 +690,9 @@ class FTPClient
      * @param int $offset
      * @return bool
      */
-    public function uploadFile(string $localfile, string $dir, ?string $name = null, int $mode = FTP_BINARY, int $offset = 0): bool
-    {
+    public function uploadFile(string $localfile, string $dir, ?string $name = null, int $mode = FTP_BINARY, int $offset = 0): bool {
         // Check if the current instance is valid, the remote directory exists, and the local file exists
-        if($this->isValid() && $this->isDir($dir) && File::isFile($localfile)) {
+        if ($this->isValid() && $this->isDir($dir) && File::isFile($localfile)) {
             $localfile = $this->arrangeLDS($localfile);
             $dir = $this->arrangeRDS($dir);
             // Determine the destination path on the remote server
@@ -768,10 +718,9 @@ class FTPClient
      * @param int $offset
      * @return bool
      */
-    public function downloadFile(string $file, string $localdir, ?string $localname = null, int $mode = FTP_BINARY, int $offset = 0): bool
-    {
+    public function downloadFile(string $file, string $localdir, ?string $localname = null, int $mode = FTP_BINARY, int $offset = 0): bool {
         // Check if the current instance is valid, the remote file is not a directory, and the local directory can be created
-        if($this->isValid() && $this->isFile($file) && File::createDir($localdir)) {
+        if ($this->isValid() && $this->isFile($file) && File::createDir($localdir)) {
             $localdir = $this->arrangeLDS($localdir);
             $file = $this->arrangeRDS($file);
             // Determine the destination path on the local machine
@@ -794,10 +743,9 @@ class FTPClient
      * @param string $localdir
      * @return bool
      */
-    public function downloadDir(string $dir, string $localdir): bool
-    {
+    public function downloadDir(string $dir, string $localdir): bool {
         // Check if the current instance is valid, the remote directory exists, and the local directory can be created or created
-        if($this->isValid() && $this->isDir($dir) && File::createDir($localdir)) {
+        if ($this->isValid() && $this->isDir($dir) && File::createDir($localdir)) {
             $localdir = $this->arrangeLDS($localdir);
             $dir = $this->arrangeRDS($dir);
             // Arrange the local directory path
@@ -817,10 +765,9 @@ class FTPClient
      * @param string $dir
      * @return bool
      */
-    public function uploadDir(string $localdir, string $dir): bool
-    {
+    public function uploadDir(string $localdir, string $dir): bool {
         // Check if the current instance is valid and the local directory exists
-        if($this->isValid() && $this->isDir($dir) && File::isDir($localdir)) {
+        if ($this->isValid() && $this->isDir($dir) && File::isDir($localdir)) {
             // Arrange the local directory path
             $localdir = $this->arrangeLDS($localdir);
             // Set the remote root directory path by appending the basename of the local directory
@@ -830,11 +777,11 @@ class FTPClient
             // Recursively scan the local directory to get a list of files and directories
             $files = array_reverse($this->sortFilesFirst(File::scanDirRecursively($localdir)));
             // Loop through the sorted list and handle directories and files separately
-            foreach($files as $file) {
+            foreach ($files as $file) {
                 // Determine the remote destination path
                 $remotedest = $dir . str_replace($localdir, "", $file);
                 // If the local item is a directory, create it on the remote server
-                if(is_dir($file)) {
+                if (is_dir($file)) {
                     $this->createDir($remotedest);
                 } else {
                     $this->bridge->put($remotedest, $file, FTP_BINARY);
@@ -853,8 +800,7 @@ class FTPClient
      * @param int $mode
      * @return bool
      */
-    public function setPermission(string $file, int $mode): bool
-    {
+    public function setPermission(string $file, int $mode): bool {
         return $this->isValid() ? $this->bridge->chmod(octdec(str_pad($mode, 4, '0', STR_PAD_LEFT)), $file) : false;
     }
 
@@ -862,8 +808,7 @@ class FTPClient
      * Get the FTP adapter
      * @return \PHPFuser\Instance\FTPClient\Bridge|null
      */
-    public function getBridge(): ?\PHPFuser\Instance\FTPClient\Bridge
-    {
+    public function getBridge(): ?\PHPFuser\Instance\FTPClient\Bridge {
         return $this->bridge;
     }
 
@@ -873,8 +818,7 @@ class FTPClient
      * Check if the stream is a valid FTP stream
      * @return bool
      */
-    private function isValidStream(): bool
-    {
+    private function isValidStream(): bool {
         return Utils::isNonNull($this->connection) && (is_resource($this->connection) || $this->connection instanceof \FTP\Connection);
     }
 
@@ -882,8 +826,7 @@ class FTPClient
      * Check if the bridge is a valid bridge from \PHPFuser\Instance\FTPClient\Bridge
      * @return bool
      */
-    private function isValidBridge(): bool
-    {
+    private function isValidBridge(): bool {
         return Utils::isNonNull($this->bridge) && $this->bridge instanceof \PHPFuser\Instance\FTPClient\Bridge;
     }
 
@@ -891,8 +834,7 @@ class FTPClient
      * Check if both the connection and adapter are set
      * @return bool
      */
-    private function isValid(): bool
-    {
+    private function isValid(): bool {
         return $this->isValidStream() && $this->isValidBridge();
     }
 
@@ -904,11 +846,10 @@ class FTPClient
      * @param int $timeout
      * @return bool
      */
-    private function FTPConnect(string $host, bool $secure = false, int $port = 21, int $timeout = 90): bool
-    {
-        if(Utils::isNull($this->connection)) {
+    private function FTPConnect(string $host, bool $secure = false, int $port = 21, int $timeout = 90): bool {
+        if (Utils::isNull($this->connection)) {
             $connection = $secure ? @ftp_ssl_connect($host, $port, $timeout) : @ftp_connect($host, $port, $timeout);
-            if(is_resource($connection) || $connection instanceof \FTP\Connection) {
+            if (is_resource($connection) || $connection instanceof \FTP\Connection) {
                 $this->connection = $connection;
                 $this->host = $host;
                 $this->port = $port;
@@ -926,8 +867,7 @@ class FTPClient
      * Set the FTP bridge
      * @param \FTP\Connection $connection
      */
-    private function setBridge(\FTP\Connection $connection)
-    {
+    private function setBridge(\FTP\Connection $connection) {
         $this->bridge = new \PHPFuser\Instance\FTPClient\Bridge($connection);
     }
 
@@ -937,8 +877,7 @@ class FTPClient
      * @param string $password
      * @return bool
      */
-    private function FTPLogin(string $username, string $password): bool
-    {
+    private function FTPLogin(string $username, string $password): bool {
         return $this->isValid() ? $this->bridge->login($username, $password) : false;
     }
 
@@ -947,8 +886,7 @@ class FTPClient
      * @param string $path
      * @return string
      */
-    private function arrangeRDS(string $path): string
-    {
+    private function arrangeRDS(string $path): string {
         return Path::arrange_dir_separators($path, false, $this->rds);
     }
 
@@ -957,8 +895,7 @@ class FTPClient
      * @param string $path
      * @return string
      */
-    private function arrangeLDS(string $path): string
-    {
+    private function arrangeLDS(string $path): string {
         return Path::arrange_dir_separators($path);
     }
 
@@ -967,13 +904,12 @@ class FTPClient
      * @param array $lists
      * @return array
      */
-    private function sortFilesFirstForList(array $lists): array
-    {
+    private function sortFilesFirstForList(array $lists): array {
         usort($lists, function (\PHPFuser\Instance\FTPClient\File $a, \PHPFuser\Instance\FTPClient\File $b) use ($lists) {
-            if(!$a->isDir() && $b->isDir()) {
+            if (!$a->isDir() && $b->isDir()) {
                 // File comes first
                 return -1;
-            } elseif($a->isDir() && !$b->isDir()) {
+            } elseif ($a->isDir() && !$b->isDir()) {
                 // Directory comes second
                 return 1;
             } else {
@@ -989,11 +925,10 @@ class FTPClient
      * @param string $ks
      * @return int
      */
-    private function clogs(string $ks): int
-    {
+    private function clogs(string $ks): int {
         $count = 0;
-        foreach($this->logs as $index => $value) {
-            if(Utils::containText($ks, $index)) {
+        foreach ($this->logs as $index => $value) {
+            if (Utils::containText($ks, $index)) {
                 $count++;
             }
         }
@@ -1005,11 +940,10 @@ class FTPClient
      * @param string $ks
      * @return array
      */
-    private function glogs(string $ks): array
-    {
+    private function glogs(string $ks): array {
         $logs = array();
-        foreach($this->logs as $index => $value) {
-            if(Utils::containText($ks, $index)) {
+        foreach ($this->logs as $index => $value) {
+            if (Utils::containText($ks, $index)) {
                 $logs[$index] = $value;
             }
         }
@@ -1022,25 +956,23 @@ class FTPClient
      * @param string $k
      * @return void
      */
-    private function log(string $message, string $k = "message"): void
-    {
+    private function log(string $message, string $k = "message"): void {
         $ks = \strtoupper($k) . "_";
         $count = $this->clogs($ks);
         $this->logs[$ks . ($count + 1)] = $message;
     }
 
     /**
-    * Sort files first then folders
-    * @param array $lists
-    * @return array
-    */
-    private function sortFilesFirst(array $lists): array
-    {
+     * Sort files first then folders
+     * @param array $lists
+     * @return array
+     */
+    private function sortFilesFirst(array $lists): array {
         usort($lists, function ($a, $b) use ($lists) {
-            if(is_file($a) && is_dir($b)) {
+            if (is_file($a) && is_dir($b)) {
                 // File comes first
                 return -1;
-            } elseif(is_dir($a) && is_file($b)) {
+            } elseif (is_dir($a) && is_file($b)) {
                 // Directory comes second
                 return 1;
             } else {
@@ -1055,8 +987,7 @@ class FTPClient
      * Check if the system type is unix type
      * @return bool
      */
-    private function isUnixType(): bool
-    {
+    private function isUnixType(): bool {
         return Utils::containText("unix", $this->rst) || Utils::containText("linux", $this->rst);
     }
 
@@ -1066,36 +997,35 @@ class FTPClient
      * @param string $localdir
      * @return bool
      */
-    private function downloadDirContents(string $dir, string $localdir): bool
-    {
+    private function downloadDirContents(string $dir, string $localdir): bool {
         $downloadedAll = false;
-        if($this->isValid() && $this->isDir($dir)) {
+        if ($this->isValid() && $this->isDir($dir)) {
             $files = $this->bridge->nlist($dir);
-            if(is_array($files)) {
+            if (is_array($files)) {
                 $toDownload = 0;
                 $downloaded = 0;
-                foreach($files as $file) {
+                foreach ($files as $file) {
                     # To prevent an infinite loop
-                    if($file != "." && $file != "..") {
+                    if ($file != "." && $file != "..") {
                         $toDownload++;
                         $localPath = Path::arrange_dir_separators(Path::merge($localdir, basename($file)));
-                        if($this->isDir($file)) {
+                        if ($this->isDir($file)) {
                             // Create directory on local filesystem
                             File::createDir($localPath);
                             // Recursive part
-                            if($this->downloadDirContents($file, $localPath)) {
+                            if ($this->downloadDirContents($file, $localPath)) {
                                 $downloaded++;
                             }
                         } else {
                             // Download files
-                            if($this->bridge->get($localPath, $file, FTP_BINARY)) {
+                            if ($this->bridge->get($localPath, $file, FTP_BINARY)) {
                                 $downloaded++;
                             }
                         }
                     }
                 }
                 // Check all files and folders have been downloaded
-                if($toDownload === $downloaded) {
+                if ($toDownload === $downloaded) {
                     $downloadedAll = true;
                 }
             }

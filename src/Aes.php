@@ -2,9 +2,9 @@
 
 namespace PHPFuser;
 
-use \PHPFuser\Utils;
-use \PHPFuser\Exception\Exception;
-use \PHPFuser\Exception\InvalidArgumentException;
+use PHPFuser\Utils;
+use PHPFuser\Exception\Exception;
+use PHPFuser\Exception\InvalidArgumentException;
 
 /**
  * @author Senestro

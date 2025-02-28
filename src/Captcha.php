@@ -65,7 +65,7 @@ class Captcha {
      * @param string $format The the image format, default to png. only png, jpg, jpeg and gif are accepted, else the default will be used.
      * @return string
      */
-    public static function createBase64Image(array $options = array(), string $namespace = "default", string $format = "png"): string {
+    public static function base64Image(array $options = array(), string $namespace = "default", string $format = "png"): string {
         $data = Captcha::createImageData($options, $namespace, $format);
         return isset($data['image']) ? Captcha::createBase64FromImage($data['image'], $data['directories'], $data['format']) : "";
     }
@@ -77,7 +77,7 @@ class Captcha {
      * @param string $format The the image format, default to png. only png, jpg, jpeg and gif are accepted, else the default will be used.
      * @return void
      */
-    public static function createOutputImage(array $options = array(), string $namespace = "default", string $format = "png"): void {
+    public static function outputImage(array $options = array(), string $namespace = "default", string $format = "png"): void {
         $data = Captcha::createImageData($options, $namespace, $format);
         if (isset($data['image'])) {
             Captcha::sendToBrowserFromImage($data['image'], $data['format']);
@@ -147,9 +147,9 @@ class Captcha {
      * @return array
      */
     private static function validateOptions(array $options = array()): array {
-        $filtered = Captcha::OPTIONS;
+        $filtered = self::OPTIONS;
         foreach ($options as $key => $value) {
-            if (isset(Captcha::OPTIONS[$key])) {
+            if (isset(self::OPTIONS[$key])) {
                 if ($key == "captcha_length") {
                     $filtered[$key] = $value < 4 or $value > 8 ? 6 : $value;
                 } elseif ($key == "transparency_percentage") {
@@ -183,8 +183,8 @@ class Captcha {
      * @param array $options The captcha options
      * @return array
      */
-    private static function colorsAllocate(\GdImage &$image, array $options = array()): array {
-        $colors = array();
+    private static function allocateStyles(\GdImage &$image, array $options = array()): array {
+        $styles = array();
         if (Utils::isNotFalse($image)) {
             $alpha = intval($options['transparency_percentage'] / 100 * 127);
             $bg = Captcha::hex2rgb($options['background_color']);
@@ -192,13 +192,13 @@ class Captcha {
             $sign = Captcha::hex2rgb($options['signature_color']);
             $line = Captcha::hex2rgb($options['line_color']);
             $noise = Captcha::hex2rgb($options['noise_color']);
-            $colors["background"] = imagecolorallocate($image, $bg['r'], $bg['g'], $bg['b']);
-            $colors["captcha"] = imagecolorallocatealpha($image, $text['r'], $text['g'], $text['b'], $alpha);
-            $colors["signature"] = imagecolorallocatealpha($image, $sign['r'], $sign['g'], $sign['b'], $alpha);
-            $colors["lines"] = imagecolorallocatealpha($image, $line['r'], $line['g'], $line['b'], $alpha);
-            $colors["noise"] = imagecolorallocatealpha($image, $noise['r'], $noise['g'], $noise['b'], $alpha);
+            $styles["background"] = imagecolorallocate($image, $bg['r'], $bg['g'], $bg['b']);
+            $styles["captcha"] = imagecolorallocatealpha($image, $text['r'], $text['g'], $text['b'], $alpha);
+            $styles["signature"] = imagecolorallocatealpha($image, $sign['r'], $sign['g'], $sign['b'], $alpha);
+            $styles["lines"] = imagecolorallocatealpha($image, $line['r'], $line['g'], $line['b'], $alpha);
+            $styles["noise"] = imagecolorallocatealpha($image, $noise['r'], $noise['g'], $noise['b'], $alpha);
         }
-        return $colors;
+        return $styles;
     }
 
     /**
@@ -281,14 +281,14 @@ class Captcha {
      * Set the captcha image background
      * @param \GdImage $image Reference to the image
      * @param array $options The captcha options
-     * @param array $colors The captcha colors for creating the captcha
+     * @param array $styles The captcha colors for creating the captcha
      * @param array $directories The private directories
      * @return void
      */
-    private static function setBackground(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array()): void {
-        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories)) {
+    private static function setBackground(\GdImage &$image, array $options = array(), array $styles = array(), array $directories = array()): void {
+        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($styles) && Utils::isNotEmptyArray($directories)) {
             $backgroundImage = null;
-            imagefilledrectangle($image, 0, 0, $options['width'], $options['height'], $colors['background']);
+            imagefilledrectangle($image, 0, 0, $options['width'], $options['height'], $styles['background']);
             if (Utils::isTrue($options['random_background']) && File::isDir($directories['backgrounds']) && Utils::isReadable($directories['backgrounds'])) {
                 $background = Captcha::getBackground($directories['backgrounds']);
                 if (Utils::isNonNull($background)) {
@@ -387,12 +387,12 @@ class Captcha {
      * Draw the noise on the captcha image
      * @param \GdImage $image Reference to the image
      * @param array $options The captcha options
-     * @param array $colors The captcha colors for creating the captcha
+     * @param array $styles The captcha colors for creating the captcha
      * @return void
      */
-    private static function drawNoise(\GdImage &$image, array $options = array(), array $colors = array()): void {
+    private static function drawNoise(\GdImage &$image, array $options = array(), array $styles = array()): void {
         // Check if the image is valid, colors array is not empty, and noise level is set and greater than 0
-        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && isset($options['noise_level']) && $options['noise_level'] > 0) {
+        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($styles) && isset($options['noise_level']) && $options['noise_level'] > 0) {
             // Limit noise level to a maximum of 10 and adjust by logarithm base 2 of e
             $noiseLevel = Captcha::calculateNoiseLevel($options['noise_level']);
             // Extract width and height from options
@@ -401,7 +401,7 @@ class Captcha {
             // Generate noise
             for ($x = 0; $x < $width; $x += 10) {
                 for ($y = 0; $y < $height; $y += 10) {
-                    Captcha::generateNoiseInGrid($image, $x, $y, $noiseLevel, $colors['noise']);
+                    Captcha::generateNoiseInGrid($image, $x, $y, $noiseLevel, $styles['noise']);
                 }
             }
         }
@@ -509,17 +509,17 @@ class Captcha {
      * Draw the lines on the captcha image
      * @param \GdImage $image Reference to the image
      * @param array $options The captcha options
-     * @param array $colors The captcha colors for creating the captcha
+     * @param array $styles The captcha colors for creating the captcha
      * @return void
      */
-    private static function drawLines(\GdImage &$image, array $options = array(), array $colors = array()): void {
+    private static function drawLines(\GdImage &$image, array $options = array(), array $styles = array()): void {
         // Check if the image is valid, colors array is not empty, and num_lines is set and greater than 0
-        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && isset($options['num_lines']) && $options['num_lines'] > 0 && isset($colors['lines'])) {
+        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($styles) && isset($options['num_lines']) && $options['num_lines'] > 0 && isset($styles['lines'])) {
             // Extract width, height, and number of lines from options
             $width = $options['width'];
             $height = $options['height'];
             $lines = $options['num_lines'];
-            $color = $colors['lines'];
+            $color = $styles['lines'];
             for ($line = 0; $line < $lines; ++$line) {
                 $lineParams = Captcha::generateLineParams($width, $height, $lines, $line);
                 Captcha::drawSingleLine($image, $lineParams, $color);
@@ -552,13 +552,13 @@ class Captcha {
      * Draw the signature on the captcha image
      * @param \GdImage $image Reference to the image
      * @param array $options The captcha options
-     * @param array $colors The captcha colors for creating the captcha
+     * @param array $styles The captcha colors for creating the captcha
      * @param array $directories The private directories
      * @return void
      */
-    private static function drawSignature(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array()): void {
+    private static function drawSignature(\GdImage &$image, array $options = array(), array $styles = array(), array $directories = array()): void {
         // Check if the image is valid, colors array is not empty, and directories array is not empty
-        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories)) {
+        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($styles) && Utils::isNotEmptyArray($directories)) {
             // Define the path to the font file
             $font = $directories['fonts'] . "signature.ttf";
             // Check if the font file exists and is readable
@@ -571,7 +571,7 @@ class Captcha {
                     $x = round(($options['width'] - $bboxDetails['width']) - 5);
                     $y = round($options['height'] - 5);
                     // Draw the signature text on the image
-                    imagettftext($image, 15, 0, $x, $y, $colors['signature'], $font, $options['signature']);
+                    imagettftext($image, 15, 0, $x, $y, $styles['signature'], $font, $options['signature']);
                 }
             }
         }
@@ -598,15 +598,15 @@ class Captcha {
      *
      * @param \GdImage &$image The GD image resource to draw the text on.
      * @param array $options Various options for drawing the CAPTCHA text (e.g., font ratio, random spaces).
-     * @param array $colors Array containing color values for text and other elements.
+     * @param array $styles Array containing color values for text and other elements.
      * @param array $directories Array containing paths to directories such as fonts.
      * @param string $textData The CAPTCHA text to be drawn on the image.
      *
      * @return void This function does not return any value.
      */
-    private static function drawCaptchaText(\GdImage &$image, array $options = array(), array $colors = array(), array $directories = array(), string $textData = ""): void {
+    private static function drawCaptchaText(\GdImage &$image, array $options = array(), array $styles = array(), array $directories = array(), string $textData = ""): void {
         // Ensure that the image, colors array, directories array, and generated text are valid
-        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($colors) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
+        if (Utils::isNotFalse($image) && Utils::isNotEmptyArray($styles) && Utils::isNotEmptyArray($directories) && Utils::isNotEmptyString($textData)) {
             // Define the path to the font file
             $font = $directories['fonts'] . "captcha.ttf";
             // Check if the font file exists and is readable
@@ -711,7 +711,7 @@ class Captcha {
                             $y = $nextYPos($y, $i, $randScale);
                         }
                         // Draw the character on the image
-                        imagettftext($image, $size, $angle, (int) $x, (int) $y, $colors['captcha'], $font, $char);
+                        imagettftext($image, $size, $angle, (int) $x, (int) $y, $styles['captcha'], $font, $char);
                         // Adjust x-position for the next character
                         if ($i == ' ') {
                             $x += $dimension[0];
@@ -743,13 +743,13 @@ class Captcha {
         $options = Captcha::validateOptions($options);
         $image = Captcha::createImage($options);
         if (Utils::isNotFalse($image)) {
-            $colors = Captcha::colorsAllocate($image, $options);
-            Captcha::setBackground($image, $options, $colors, $directories);
+            $styles = Captcha::allocateStyles($image, $options);
+            Captcha::setBackground($image, $options, $styles, $directories);
             $generatedText = Captcha::createNameSpaceFileAndReturnCaptchaText($options, $directories, $namespace);
-            Captcha::drawNoise($image, $options, $colors);
-            Captcha::drawLines($image, $options, $colors);
-            Captcha::drawSignature($image, $options, $colors, $directories);
-            Captcha::drawCaptchaText($image, $options, $colors, $directories, $generatedText);
+            Captcha::drawNoise($image, $options, $styles);
+            Captcha::drawLines($image, $options, $styles);
+            Captcha::drawSignature($image, $options, $styles, $directories);
+            Captcha::drawCaptchaText($image, $options, $styles, $directories, $generatedText);
             $format = Utils::inArray(strtolower($format), Captcha::FORMATS) ? $format : "png";
             $result['image'] = $image;
             $result['directories'] = $directories;

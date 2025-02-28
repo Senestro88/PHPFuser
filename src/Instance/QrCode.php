@@ -2,11 +2,8 @@
 
 namespace PHPFuser\Instance;
 
-use \PHPFuser\Utils;
-use \Endroid\QrCode\Builder\Builder;
 use \Endroid\QrCode\Encoding\Encoding;
 use \Endroid\QrCode\Label\LabelAlignment;
-use \Endroid\QrCode\Label\Font\NotoSans;
 use \Endroid\QrCode\Label\Font\Font;
 use \Endroid\QrCode\RoundBlockSizeMode;
 use \Endroid\QrCode\Writer\PngWriter;
@@ -16,19 +13,41 @@ use \Endroid\QrCode\ErrorCorrectionLevel;
 use \Endroid\QrCode\Label\Label;
 use \Endroid\QrCode\Logo\Logo;
 use \Endroid\QrCode\Writer\Result\ResultInterface;
-use \PHPFuser\Enum\ECLevel;
-use \PHPFuser\QrCodeResult;
 
 /**
  * @author Senestro
  */
 class QrCode {
     // PRIVATE VARIABLE
+
+    /**
+     * @var string The data to be encoded in the QR code.
+     */
     private string $data;
+
+    /**
+     * @var string The character encoding (default is "UTF-8").
+     */
     private string $encoding = "UTF-8";
+
+    /**
+     * @var int The size of the QR code (default is 300).
+     */
     private int $size = 300;
+
+    /**
+     * @var int The margin around the QR code (default is 10).
+     */
     private int $margin = 10;
+
+    /**
+     * @var ?Logo The path to the logo file.
+     */
     private ?Logo $logo;
+
+    /**
+     * @var ?Label The text label to display.
+     */
     private ?Label $label;
 
     // PUBLIC VARIABLES

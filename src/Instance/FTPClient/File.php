@@ -29,8 +29,7 @@ class File {
     private string $target;
 
     /**
-     * The remote directory separator
-     * @var string
+     * @var string The remote directory separator
      */
     private string $rds = "/";
 

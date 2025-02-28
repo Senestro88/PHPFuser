@@ -197,18 +197,4 @@ class QrCode {
     }
 
     // PRIVATE METHODS
-
-    /**
-     * Get the temporary directory path for storing qrcodes.
-     *
-     * @return string The path to the temporary directory with proper directory separators.
-     */
-    private static function getTempDir(): string {
-        // Arrange and ensure proper directory separators for the temporary directory path.
-        return Path::insert_dir_separator(Path::arrange_dir_separators(PHPFUSER['DIRECTORIES']['DATA'] . DIRECTORY_SEPARATOR . 'qrcodes' . DIRECTORY_SEPARATOR . 'temp'));
-    }
-
-    private static function createTempFilename(string $extension): string {
-        return self::getTempDir() . Utils::generateRandomFilename($extension);
-    }
 }

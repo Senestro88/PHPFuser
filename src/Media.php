@@ -12,7 +12,10 @@ class Media {
 
     // PUBLIC METHODS
 
-    public function __construct() {
+    /**
+     * Prevent the constructor from being initialized
+     */
+    private function __construct() {
     }
 
     /**

@@ -14,8 +14,16 @@ use PHPFuser\Utils;
  * @author Senestro
  */
 class DatabaseFile {
-    private $db;
-    private $dbFilename;
+
+    /**
+     * @var PDO The database instance
+     */
+    private PDO $db;
+
+    /**
+     * @var string The name of the database file
+     */
+    private string $dbFilename;
 
     /**
      * Constructor for initializing the SQLite database connection.

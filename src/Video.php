@@ -31,7 +31,4 @@ class Video {
     }
 
     
-
-
-    // PRIVATE
 }
