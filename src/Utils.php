@@ -3441,9 +3441,9 @@ class Utils {
      *
      * @return string|null The modified image with the logo embedded as binary data, or null on failure.
      */
-    public static function addLogoIntoImageFromImageResource(\GdImage $resource, string $logo): ?string {
+    public static function insertLogoIntoImageFromImageResource(\GdImage $resource, string $logo): ?string {
         // Convert the GdImage resource to binary and insert the logo
-        return self::addLogoIntoImageFromImageBinary(self::convertImageResourceToImageBinary($resource, "png"), $logo);
+        return self::insertLogoIntoImageFromImageBinary(self::convertImageResourceToImageBinary($resource, "png"), $logo);
     }
 
     /**
@@ -3454,7 +3454,7 @@ class Utils {
      *
      * @return string|null The modified image with the logo embedded as binary data, or null on failure.
      */
-    public static function addLogoIntoImageFromImageBinary(string $binary, string $filename): ?string {
+    public static function insertLogoIntoImageFromImageBinary(string $binary, string $filename): ?string {
         // Check if the logo file exists
         if (File::isFile($filename)) {
             // Create image resources from the binary data of the base image and the logo file

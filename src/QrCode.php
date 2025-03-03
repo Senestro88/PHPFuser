@@ -31,35 +31,29 @@ class QrCode {
     }
 
     /**
-     * Generates a QR code with optional logo embedding and returns it as binary or a Data URI.
+     * Generates a QR code with optional logo embedding and returns it as binary or a Data URI (Uses BaconQrCode)
      *
      * @param string $data The data to encode in the QR code.
-     * @param string|null $logo The path to the logo file to embed in the QR code (optional).
      * @param int $size The size of the QR code image in pixels (default: 400).
      * @param int $margin The margin (quiet zone) around the QR code in pixels (default: 2).
-     * @param string $ecl The error correction level: "L", "M", "Q", or "H" (default: "H").
-     * @param bool $asDataUri Whether to return the result as a Data URI (default: false).
+     * @param string $errorCorrectionLevel The error correction level: "L", "M", "Q", or "H" (default: "H").
+     * @param bool $asDataUri Whether to return the result as a Data URI (default: true).
      * @param string $dataUriMimeType The MIME type to use if returning a Data URI (default: "image/png").
      *
      * @return string The generated QR code as binary data or a Data URI string.
      */
-    public static function create(string $data, ?string $logo = null, int $size = 400, int $margin = 2, string $ecl = "H", bool $asDataUri = false, string $dataUriMimeType = "image/png"): string {
+    public static function create(string $data, int $size = 400, int $margin = 2, string $errorCorrectionLevel = "H", bool $asDataUri = true, string $dataUriMimeType = "image/png"): string {
         try {
             // Define a mapping of error correction levels to corresponding library objects
-            $levels = ["L" => ErrorCorrectionLevel::L(), "M" => ErrorCorrectionLevel::M(), "Q" => ErrorCorrectionLevel::Q(), "H" => ErrorCorrectionLevel::H()];
+            $levels = array("L" => ErrorCorrectionLevel::L(), "M" => ErrorCorrectionLevel::M(), "Q" => ErrorCorrectionLevel::Q(), "H" => ErrorCorrectionLevel::H());
             // Validate and set the error correction level; default to "H" if invalid
-            $ecl = $levels[$ecl] ?? ErrorCorrectionLevel::H();
+            $errorCorrectionLevel = $levels[$errorCorrectionLevel] ?? ErrorCorrectionLevel::H();
             // Initialize the renderer with specified size and margin
             $renderer = new GDLibRenderer($size, $margin);
             // Create a QR code writer using the configured renderer
             $writer = new Writer($renderer);
             // Generate the QR code as binary image data
-            $result = $writer->writeString($data, Encoder::DEFAULT_BYTE_MODE_ENCODING, $ecl);
-            // If a logo is provided, attempt to embed it into the QR code
-            if (Utils::isNonNull($logo) && File::isFile($logo)) {
-                // Add the logo into the generated QR code; fallback to the original result if embedding fails
-                $result = Utils::addLogoIntoImageFromImageBinary($result, $logo) ?: $result;
-            }
+            $result = $writer->writeString($data, Encoder::DEFAULT_BYTE_MODE_ENCODING, $errorCorrectionLevel);
             // If requested, convert the binary QR code image to a Data URI
             return $asDataUri ? Utils::convertImageBinaryToDataUri($result, $dataUriMimeType) : $result;
         } catch (\Throwable $throwable) {
@@ -68,26 +62,26 @@ class QrCode {
     }
 
     /**
-     * Generates a QR code with optional customization, including logo embedding, color, and scale.
+     * Generates a QR code with optional customization, including logo embedding, color, and scale (Ues chillerlan\QRCode\QRCode)
      *
      * @param string $data The data to encode in the QR code.
      * @param string|null $logo The file path to a logo to embed in the QR code (optional).
      * @param int $scale The scaling factor for the QR code (default: 10).
      * @param int $spacing The spacing around the logo (default: 6).
-     * @param string $ecl The error correction level: "L", "M", "Q", or "H" (default: "H").
+     * @param string $errorCorrectionLevel The error correction level: "L", "M", "Q", or "H" (default: "H").
      * @param array $color The RGB color for QR code modules (default: array(22, 39, 130)).
      * @param bool $asDataUri Whether to return the QR code as a Data URI (default: true).
      *
      * @return string The generated QR code as a binary string or Data URI.
      */
-    public static function generate(string $data, ?string $logo = null, int $scale = 10, int $spacing = 6, string $ecl = "H", array $color = array(22, 39, 130), bool $asDataUri = true): string {
+    public static function generate(string $data, ?string $logo = null, int $scale = 10, int $spacing = 6, string $errorCorrectionLevel = "H", array $color = array(22, 39, 130), bool $asDataUri = true): string {
         try {
             // Initialize the result variable
             $result = "";
             // Define valid error correction levels and their mappings to library constants
             $levels = ["L" => EccLevel::L, "M" => EccLevel::M, "Q" => EccLevel::Q, "H" => EccLevel::H];
             // Set the error correction level, defaulting to "H" if the provided level is invalid
-            $ecl = $levels[$ecl] ?? EccLevel::H;
+            $errorCorrectionLevel = $levels[$errorCorrectionLevel] ?? EccLevel::H;
             // Check if the provided logo is a valid and readable file
             $logoIsFile = Utils::isNonNull($logo) && File::isFile($logo) && Utils::isReadable($logo);
             // Default QR code options
@@ -95,7 +89,7 @@ class QrCode {
                 'version' => 5, // QR code version
                 'outputType' => QROutputInterface::GDIMAGE_PNG, // Output type (PNG image)
                 'returnResource' => false, // Return the image as a string
-                'eccLevel' => $ecl, // Error correction level
+                'eccLevel' => $errorCorrectionLevel, // Error correction level
                 'outputBase64' => $asDataUri, // Output as a Base64 Data URI if enabled
                 "drawCircularModules" => false, // Use square modules for the QR code
                 "scale" => $scale, // Scale of the QR code
@@ -133,7 +127,7 @@ class QrCode {
     }
 
     /**
-     * Reads QR code data from an image file.
+     * Reads QR code data from an image file (Uses Zxing\QrReader)
      * 
      * @param string $filename The path to the QR code image file.
      * 
@@ -153,7 +147,7 @@ class QrCode {
     }
 
     /**
-     * Reads QR code data from an image file.
+     * Reads QR code data from an image file (Uses chillerlan\QRCode\QRCode)
      * 
      * @param string $filename The path to the QR code image file.
      * 
@@ -175,7 +169,7 @@ class QrCode {
     }
 
     /**
-     * Reads and processes QR code data from a text string.
+     * Reads and processes QR code data from a text string (Uses chillerlan\QRCode\QRCode)
      * 
      * @param string $text The text content representing QR code data.
      * 
