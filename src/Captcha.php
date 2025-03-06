@@ -870,11 +870,11 @@ class Captcha {
             $value = Utils::isNotFalse(Captcha::strpos($value, ' ')) ? preg_replace('/\s+/', ' ', $value) : $value;
             if (time() < $expires) {
                 $compares = $caseInsensitive ? strcasecmp($value, $code) : strcmp($value, $code);
-                $validated = $compares == 0;
-                if (Utils::isTrue($validated) && File::isFile($namespaceFilename)) {
+                $validated = Utils::isTrue($compares == 0);
+                if ($validated) {
                     File::deleteFile($namespaceFilename);
                 }
-                return Utils::isTrue($validated);
+                return $validated;
             }
         }
         return false;
