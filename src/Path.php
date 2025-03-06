@@ -99,11 +99,17 @@ class Path {
     }
 
     /**
-     * Merge paths together
-     * @param string $a
-     * @param string $b
-     * @param string|null $separator Use this to overwrite the default build in DIRECTORY_SEPARATOR constant
-     * @return string
+     * Merges two string paths using a specified separator.
+     *
+     * This method ensures that the first path does not end with the separator and 
+     * the second path does not start with the separator before merging them.
+     * 
+     * If no separator is provided, it defaults to the system's DIRECTORY_SEPARATOR.
+     *
+     * @param string $a The first path segment.
+     * @param string $b The second path segment.
+     * @param string|null $separator The separator to use (optional).
+     * @return string The merged path.
      */
     public static function merge(string $a, string $b, ?string $separator = null): string {
         // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
@@ -111,6 +117,25 @@ class Path {
         $a = Path::right_delete_dir_separator($a, $separator);
         $b = Path::left_delete_dir_separator($b, $separator);
         return $a . $separator . $b;
+    }
+
+    /**
+     * Merges an array of strings into a single string using a specified separator.
+     *
+     * This method ensures that all elements in the array are treated as strings
+     * before joining them with the specified separator.
+     * 
+     * If no separator is provided, it defaults to the system's DIRECTORY_SEPARATOR.
+     *
+     * @param array $a The array of string segments to merge.
+     * @param string|null $separator The separator to use (optional).
+     * @return string The merged string.
+     */
+    public static function arrayMerge(array $a, ?string $separator = null): string {
+        // Use the provided separator, or default to the system's DIRECTORY_SEPARATOR if not provided.
+        $separator = \is_string($separator) && !empty($separator) ? $separator : DIRECTORY_SEPARATOR;
+        $b = \array_map("is_string", $a);
+        return \implode($separator, $b);
     }
 
     // PRIVATE METHODS
