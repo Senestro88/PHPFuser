@@ -3,9 +3,9 @@
 namespace PHPFuser\Instance;
 
 use PHPMailer\PHPMailer\SMTP;
-use \PHPFuser\Utils;
-use \PHPFuser\File;
-use  \PHPMailer\PHPMailer\PHPMailer;
+use PHPFuser\Utils;
+use PHPFuser\File;
+use  PHPMailer\PHPMailer\PHPMailer;
 
 /**
  * @author Senestro
@@ -43,17 +43,17 @@ class Mail {
      */
     private int $wordwrap = 100;
 
-
     private bool $verifyPeer = false;
     private bool $verifyPeerName = false;
     private bool $allowSelfSigned = false;
+    private string $message = "";
 
     // PUBLIC VARIABLES
     // PUBLIC METHODS
 
     /**
      * Construct a new Mail instance
-     * 
+     *
      * @param array $config The mail configuration data which consists of host, username, password, mode (tls or ssl), port (tls: 587 and ssl:465), wordwrap, verifyPeer, verifyPeerName, and allowSelfSigned
      */
     public function __construct(array $config = array()) {
@@ -63,7 +63,7 @@ class Mail {
 
     /**
      * Send a mail
-     * 
+     *
      * @param string $emailFrom
      * @param string $emailTo
      * @param string $title
@@ -72,11 +72,11 @@ class Mail {
      * @param bool $authenticate
      * @param bool $debug
      * @return bool|string
-     * 
+     *
      * Return true on success, otherwise false or string representing error message
      */
-    public function sendMail(string $emailFrom, string $emailTo, string $title, string $message, array $attachments = array(), bool $authenticate = true, bool $debug = false): bool|string {
-        $result = "";
+    public function sendMail(string $emailFrom, string $emailTo, string $title, string $message, array $attachments = array(), bool $authenticate = true, bool $debug = false): bool {
+        $result = false;
         // Check if PHPMailer class exists
         if (class_exists("\PHPMailer\PHPMailer\PHPMailer")) {
             $mailer = new PHPMailer();
@@ -101,20 +101,23 @@ class Mail {
                 // Send mail
                 $result = $mailer->send();
                 $mailer->clearAllRecipients();
+                $result = true;
             } catch (\Throwable $e) {
-                $result = "Unable to mail message to " . $emailTo . " [" . $mailer->ErrorInfo . "]";
+                $this->message = "Unable to mail message to " . $emailTo . " [" . $mailer->ErrorInfo . "]";
             }
         } else {
-            $result = "To send a mail, the PHPMailer class [\PHPMailer\PHPMailer\PHPMailer] must exists.";
+            $this->message = "To send a mail, the PHPMailer class [\PHPMailer\PHPMailer\PHPMailer] must exists.";
         }
         return $result;
     }
+
+    public function getMessage(): string {return $this->message;}
 
     // PRIVATE METHODS
 
     /**
      * Override configuration
-     * 
+     *
      * @param array $config
      */
     private function configure(array $config = array()) {
@@ -132,7 +135,7 @@ class Mail {
 
     /**
      * Reset attachments to only include valid files
-     * 
+     *
      * @param array $attachments
      * @return array
      */
@@ -147,11 +150,11 @@ class Mail {
 
     /**
      * Insert attachments into the mailer
-     * 
+     *
      * @param \PHPMailer\PHPMailer\PHPMailer $mailer
      * @param array $attachments
      */
-    private function insertAttachments(\PHPMailer\PHPMailer\PHPMailer $mailer, array $attachments = array()): void {
+    private function insertAttachments(PHPMailer $mailer, array $attachments = array()): void {
         foreach ($attachments as $attachment) {
             if (File::isFile($attachment)) {
                 $mailer->addAttachment($attachment);
@@ -161,11 +164,11 @@ class Mail {
 
     /**
      * Set authentication for the mailer
-     * 
+     *
      * @param \PHPMailer\PHPMailer\PHPMailer $mailer
      * @param bool $authenticate
      */
-    private function setAuthentication(\PHPMailer\PHPMailer\PHPMailer $mailer, bool $authenticate = true): void {
+    private function setAuthentication(PHPMailer $mailer, bool $authenticate = true): void {
         if ($authenticate) {
             $mailer->isSMTP();
             $mailer->SMTPAuth = true; // Whether to use SMTP authentication.
