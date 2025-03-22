@@ -7,97 +7,120 @@ use PHPFuser\Utils;
 /**
  * Handles Google reCAPTCHA verification.
  * 
- * This class wraps around the `\ReCaptcha\ReCaptcha` library to validate 
- * reCAPTCHA responses and retrieve error codes if validation fails.
+ * This class provides an abstraction over the `\ReCaptcha\ReCaptcha` library
+ * to validate reCAPTCHA responses, enforce security checks, and retrieve 
+ * error codes if validation fails.
  * 
  * @author Senestro
  */
 class Recaptcha {
     /**
-     * The user's reCAPTCHA response token.
-     * 
-     * This token is provided by the client and is required for verification.
-     * It may be null if not set during initialization.
-     * 
-     * @var string|null
+     * @var string The secret key used for verifying reCAPTCHA responses.
      */
-    private ?string $response = null;
+    private string $secret;
 
     /**
-     * The user's remote IP address.
-     * 
-     * This IP address is used for additional security checks during reCAPTCHA verification.
-     * It may be null if not set during initialization.
-     * 
-     * @var string|null
-     */
-    private ?string $remoteIP = null;
-
-
-    /**
-     * The reCAPTCHA instance for verification.
-     * 
-     * @var \ReCaptcha\ReCaptcha
+     * @var \ReCaptcha\ReCaptcha The reCAPTCHA instance used for verification.
      */
     private \ReCaptcha\ReCaptcha $recaptcha;
 
     /**
-     * The reCAPTCHA verification response.
-     * 
-     * This is null until `validate()` is called.
-     * 
-     * @var \ReCaptcha\Response|null
+     * @var \ReCaptcha\Response|null Holds the last reCAPTCHA verification response.
      */
-    private ?\ReCaptcha\Response $rresponse = null;
+    private ?\ReCaptcha\Response $recaptchaResponse = null;
 
     /**
-     * Constructs a new Recaptcha instance.
+     * Constructor initializes the reCAPTCHA object with the given secret key.
      * 
-     * @param string|null $response  The reCAPTCHA response token from the user.
-     * @param string $remoteIP       The user's IP address.
+     * @param string $secret The secret key provided by Google reCAPTCHA.
      */
-    public function __construct(?string $response, ?string $remoteIP) {
-        $this->response = $response;
-        $this->remoteIP = $remoteIP;
-        $this->recaptcha = new \ReCaptcha\ReCaptcha($this->response);
+    public function __construct(string $secret) {
+        $this->secret = $secret;
+        $this->recaptcha = new \ReCaptcha\ReCaptcha($this->secret);
     }
 
     /**
-     * Sets the expected hostname for the reCAPTCHA verification.
+     * Sets the expected hostname for reCAPTCHA validation.
      * 
-     * @param string $hostname The expected hostname.
+     * This is useful for security, ensuring the token is being used from
+     * the correct domain.
+     * 
+     * @param string $hostname The expected hostname (e.g., example.com).
      */
     public function setExpectedHostname(string $hostname): void {
         $this->recaptcha->setExpectedHostname($hostname);
     }
 
     /**
-     * Validates the reCAPTCHA response.
+     * Sets the expected action for reCAPTCHA v3 validation.
      * 
-     * Calls the reCAPTCHA verification API and checks if the response is valid.
+     * Google recommends setting an expected action to improve security.
      * 
-     * @return bool True if the response is valid, false otherwise.
+     * @param string $action The expected action (e.g., "login", "register").
      */
-    public function validate(): bool {
-        $this->rresponse = $this->recaptcha->setScoreThreshold(1)->verify($this->response, $this->remoteIP);
-        return $this->rresponse->isSuccess();
+    public function setExpectedAction(string $action): void {
+        $this->recaptcha->setExpectedAction($action);
     }
 
     /**
-     * Retrieves the reCAPTCHA verification response.
+     * Sets the expected APK package name for mobile app verification.
      * 
-     * @return \ReCaptcha\Response|array The response object if available, otherwise an empty array.
+     * This is applicable when using reCAPTCHA in Android applications.
+     * 
+     * @param string $apkPackageName The expected Android package name.
+     */
+    public function setExpectedApkPackageName(string $apkPackageName): void {
+        $this->recaptcha->setExpectedApkPackageName($apkPackageName);
+    }
+
+    /**
+     * Sets the minimum score threshold for reCAPTCHA v3 validation.
+     * 
+     * reCAPTCHA v3 assigns a score between 0.0 and 1.0, where higher scores 
+     * indicate a higher likelihood of human interaction. This method allows 
+     * adjusting the minimum required score for a request to be considered valid.
+     * 
+     * @param float $scoreThreshold The minimum required score (default is usually 0.5 to 0.7).
+     */
+    public function setScoreThreshold(float $scoreThreshold): void {
+        $this->recaptcha->setScoreThreshold($scoreThreshold);
+    }
+
+
+    /**
+     * Verifies the reCAPTCHA response.
+     * 
+     * This method validates the given reCAPTCHA response against Google's
+     * verification API. It also allows setting a custom score threshold
+     * for reCAPTCHA v3.
+     * 
+     * @param string $response The reCAPTCHA response token from the frontend.
+     * @param string|null $remoteIP (Optional) The user's IP address for additional security checks.
+     * @return bool True if the reCAPTCHA validation is successful, false otherwise.
+     */
+    public function verify(string $response, ?string $remoteIP = null): bool {
+        $this->recaptchaResponse = $this->recaptcha->verify($response, $remoteIP);
+        return $this->recaptchaResponse->isSuccess();
+    }
+
+    /**
+     * Retrieves the last reCAPTCHA response object or an empty array if no verification was done.
+     * 
+     * @return \ReCaptcha\Response|array The reCAPTCHA response object or an empty array.
      */
     public function getResponse(): \ReCaptcha\Response | array {
-        return Utils::isNonNull($this->rresponse) ? $this->rresponse : [];
+        return  \is_null($this->recaptchaResponse) ? [] : $this->recaptchaResponse;
     }
 
     /**
-     * Retrieves any error codes from the last reCAPTCHA verification attempt.
+     * Retrieves error codes from the last reCAPTCHA validation attempt.
      * 
-     * @return array An array of error codes, or an empty array if none exist.
+     * If the last validation attempt failed, this method returns an array of
+     * error codes provided by Google, explaining the failure reason.
+     * 
+     * @return array List of error codes (empty array if no errors or no validation performed).
      */
     public function getErrorCodes(): array {
-        return Utils::isNonNull($this->rresponse) ? $this->rresponse->getErrorCodes() : [];
+        return  \is_null($this->recaptchaResponse) ? [] : $this->recaptchaResponse->getErrorCodes();
     }
 }
