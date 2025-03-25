@@ -8,6 +8,10 @@ use Mpdf\Mpdf;
 use PHPFuser\File;
 use PHPFuser\Path;
 use DeviceDetector\DeviceDetector;
+use Exception;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Response;
@@ -3144,7 +3148,7 @@ class Utils {
         $name = self::isNotEmptyString($extension) && strtolower($extension) == "php" ? $plugin : $plugin . '.php';
         $plugin = $dirname . '' . $name;
         if (File::isFile($plugin)) {
-            require_once $plugin; 
+            require_once $plugin;
         } else {
             throw new \Exception("The plugin \"" . $plugin . "\" doesn't exist.");
         }
@@ -3704,5 +3708,42 @@ class Utils {
      */
     public static function notSameInt(int $a, int $b): bool {
         return $a != $b;
+    }
+
+
+    /**
+     * Generates a JSON Web Token (JWT).
+     *
+     * @param array  $payload The payload data to be encoded in the JWT.
+     * @param string $key The secret key used for signing the token.
+     * @param string $algo The signing algorithm (default: HS256).
+     * @param string|null $keyId Optional key ID used in the header.
+     * @param array|null $head Optional additional headers.
+     *
+     * @return string The generated JWT as a string.
+     */
+    public static function generateJWT(array $payload, string $key, string $algo = "HS256", ?string $keyId = null, ?array $head = null): string {
+        return JWT::encode($payload, $key, $algo, $keyId, $head);
+    }
+
+    /**
+     * Verifies a JSON Web Token (JWT).
+     *
+     * @param string $token The JWT to be verified.
+     * @param string|array $key The secret key or an array of keys for verification.
+     * @param string $algo The expected signing algorithm (default: HS256).
+     * @param stdClass|null &$headers Reference to store the decoded token's headers.
+     *
+     * @return bool Returns true if the token is valid, false otherwise.
+     */
+    public static function verifyJWT(string $token, string|array $key, string $algo = "HS256", ?stdClass &$headers = null): bool {
+        try {
+            // Decode the token using the provided key and algorithm
+            $result = JWT::decode($token, new Key($key, $algo), $headers);
+            return true;
+        } catch (Exception $e) {
+            // Return false if the token is invalid or an error occurs
+            return false;
+        }
     }
 }
