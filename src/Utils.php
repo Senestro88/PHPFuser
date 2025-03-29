@@ -2,8 +2,6 @@
 
 namespace PHPFuser;
 
-use DateInterval;
-use DateTime;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Mpdf\Mpdf;
@@ -13,14 +11,6 @@ use DeviceDetector\DeviceDetector;
 use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use ParagonIE\Paseto\Builder;
-use ParagonIE\Paseto\Keys\Version4\SymmetricKey;
-use ParagonIE\Paseto\Parser;
-use ParagonIE\Paseto\Protocol\Version4;
-use ParagonIE\Paseto\ProtocolCollection;
-use ParagonIE\Paseto\Purpose;
-use ParagonIE\Paseto\Rules\IssuedBy;
-use ParagonIE\Paseto\Rules\ValidAt;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -3770,69 +3760,6 @@ class Utils {
         } catch (Exception $e) {
             // Return an empty array if decoding fails (invalid token or other errors)
             return array();
-        }
-    }
-
-    /**
-     * Generate a PASETO token using a shared key.
-     *
-     * @param array $claims An associative array of claims to be embedded in the token.
-     * @param string $sharedKey A 32-byte symmetric key used for encryption.
-     * @param DateTime $expirationDate The expiration date and time for the token.
-     * @return string|null Returns the generated PASETO token as a string or null if an error occurs.
-     */
-    public static function generatePasetoToken(array $claims, string $sharedKey, DateTime $expirationDate): ?string {
-        try {
-            // Create a symmetric key for PASETO
-            $symmetricKey = new SymmetricKey($sharedKey, new Version4());
-            // Initialize a PASETO token builder
-            $builder = new Builder();
-            $builder->setKey($symmetricKey);
-            $builder->setVersion(new Version4());
-            $builder->setPurpose(Purpose::local());
-            // Set token time constraints
-            $builder->setIssuedAt(); // Token issued time (current time)
-            $builder->setNotBefore(); // Token is valid immediately
-            $builder->setExpiration($expirationDate); // Use provided expiration date
-            $builder->setIssuer("ShibbeeMoviesAPI");
-            // Store custom claims in the token
-            $builder->setClaims($claims);
-            // Generate and return the PASETO token as a string
-            return $builder->toString();
-        } catch (\Throwable $throwable) {
-            // Return null if any exception occurs
-            return null;
-        }
-    }
-
-    /**
-     * Extract claims from a PASETO token using the shared key.
-     *
-     * @param string $receivedToken The PASETO token to be validated.
-     * @param string $sharedKey A 32-byte symmetric key used for decryption.
-     * @return array|null Returns the claims as an associative array if valid, or null if invalid.
-     */
-    public static function getPasetoTokenClaims(string $receivedToken, string $sharedKey): ?array {
-        try {
-            // Create a symmetric key for PASETO
-            $symmetricKey = new SymmetricKey($sharedKey, new Version4());
-            // Initialize a PASETO token parser
-            $parser = new Parser();
-            $parser->setKey($symmetricKey);
-            // Adding rules to be checked against the token
-            $parser->addRule(new ValidAt);
-            $parser->addRule(new IssuedBy('ShibbeeMoviesAPI'));
-            $parser->setPurpose(Purpose::local());
-            // Only allow version 4
-            $parser->setAllowedVersions(ProtocolCollection::v4());
-            // Parse and validate the token
-            $parsedToken = $parser->parse($receivedToken, false);
-            // Return the extracted claims from the token
-            return $parsedToken->getClaims();
-        } catch (\Throwable $throwable) {
-            \var_export($throwable->getMessage());
-            // Return null if the token is invalid or any error occurs
-            return null;
         }
     }
 }
