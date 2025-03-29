@@ -2,6 +2,8 @@
 
 namespace PHPFuser;
 
+use DateInterval;
+use DateTime;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Mpdf\Mpdf;
@@ -11,6 +13,14 @@ use DeviceDetector\DeviceDetector;
 use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use ParagonIE\Paseto\Builder;
+use ParagonIE\Paseto\Keys\Version4\SymmetricKey;
+use ParagonIE\Paseto\Parser;
+use ParagonIE\Paseto\Protocol\Version4;
+use ParagonIE\Paseto\ProtocolCollection;
+use ParagonIE\Paseto\Purpose;
+use ParagonIE\Paseto\Rules\IssuedBy;
+use ParagonIE\Paseto\Rules\ValidAt;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -3256,7 +3266,11 @@ class Utils {
             return null; // Return null since the PDF is downloaded
         }
         // Return the PDF content as a string
-        return $mpdf->Output('', 'S');
+        /**
+        @var string
+         */
+        $string = $mpdf->Output('', 'S');
+        return $string;
     }
 
     /**
@@ -3710,40 +3724,115 @@ class Utils {
         return $a != $b;
     }
 
-
     /**
      * Generates a JSON Web Token (JWT).
      *
-     * @param array  $payload The payload data to be encoded in the JWT.
-     * @param string $key The secret key used for signing the token.
-     * @param string $algo The signing algorithm (default: HS256).
-     * @param string|null $keyId Optional key ID used in the header.
-     * @param array|null $head Optional additional headers.
+     * <p>
+     * This function creates and signs a JWT using the specified payload, secret key,
+     * and algorithm. The optional parameters allow setting a key ID (`kid`) and custom headers.
+     * </p>
+     *
+     * @param array       $payload The payload data to encode in the JWT.
+     * @param string      $key     The secret key used to sign the token.
+     * @param string      $algo    The signing algorithm (default: "HS256").
+     * @param string|null $keyId   Optional key ID (`kid`) header parameter.
+     * @param array|null  $head    Optional additional headers.
      *
      * @return string The generated JWT as a string.
      */
-    public static function generateJWT(array $payload, string $key, string $algo = "HS256", ?string $keyId = null, ?array $head = null): string {
+    public static function generateJsonWebToken(array $payload, string $key, string $algo = "HS256", ?string $keyId = null, ?array $head = null): string {
         return JWT::encode($payload, $key, $algo, $keyId, $head);
     }
 
     /**
-     * Verifies a JSON Web Token (JWT).
+     * Decodes a JWT token and extracts its payload.
      *
-     * @param string $token The JWT to be verified.
-     * @param string|array $key The secret key or an array of keys for verification.
-     * @param string $algo The expected signing algorithm (default: HS256).
-     * @param stdClass|null &$headers Reference to store the decoded token's headers.
+     * <p>
+     * This function verifies and decodes a JSON Web Token (JWT) using the specified
+     * secret key and algorithm. If decoding is successful, the payload is returned
+     * as an associative array. If decoding fails (due to an invalid token or error),
+     * an empty array is returned.
+     * </p>
      *
-     * @return bool Returns true if the token is valid, false otherwise.
+     * @param string        $token   The JWT token to decode.
+     * @param string|array  $key     The secret key or an array of keys used for verification.
+     * @param string        $algo    The algorithm used for signing (default: "HS256").
+     * @param stdClass|null $headers Reference to store the JWT headers (optional).
+     *
+     * @return array The decoded JWT payload as an associative array. Returns an empty array on failure.
      */
-    public static function verifyJWT(string $token, string|array $key, string $algo = "HS256", ?stdClass &$headers = null): bool {
+    public static function getJsonWebTokenPayload(string $token, string|array $key, string $algo = "HS256", ?stdClass &$headers = null): array {
         try {
-            // Decode the token using the provided key and algorithm
+            // Decode the token using the specified key and algorithm
             $result = JWT::decode($token, new Key($key, $algo), $headers);
-            return true;
+            // Convert the decoded object to an associative array and return
+            return json_decode(json_encode($result), true);
         } catch (Exception $e) {
-            // Return false if the token is invalid or an error occurs
-            return false;
+            // Return an empty array if decoding fails (invalid token or other errors)
+            return array();
+        }
+    }
+
+    /**
+     * Generate a PASETO token using a shared key.
+     *
+     * @param array $claims An associative array of claims to be embedded in the token.
+     * @param string $sharedKey A 32-byte symmetric key used for encryption.
+     * @param DateTime $expirationDate The expiration date and time for the token.
+     * @return string|null Returns the generated PASETO token as a string or null if an error occurs.
+     */
+    public static function generatePasetoToken(array $claims, string $sharedKey, DateTime $expirationDate): ?string {
+        try {
+            // Create a symmetric key for PASETO
+            $symmetricKey = new SymmetricKey($sharedKey, new Version4());
+            // Initialize a PASETO token builder
+            $builder = new Builder();
+            $builder->setKey($symmetricKey);
+            $builder->setVersion(new Version4());
+            $builder->setPurpose(Purpose::local());
+            // Set token time constraints
+            $builder->setIssuedAt(); // Token issued time (current time)
+            $builder->setNotBefore(); // Token is valid immediately
+            $builder->setExpiration($expirationDate); // Use provided expiration date
+            $builder->setIssuer("ShibbeeMoviesAPI");
+            // Store custom claims in the token
+            $builder->setClaims($claims);
+            // Generate and return the PASETO token as a string
+            return $builder->toString();
+        } catch (\Throwable $throwable) {
+            // Return null if any exception occurs
+            return null;
+        }
+    }
+
+    /**
+     * Extract claims from a PASETO token using the shared key.
+     *
+     * @param string $receivedToken The PASETO token to be validated.
+     * @param string $sharedKey A 32-byte symmetric key used for decryption.
+     * @return array|null Returns the claims as an associative array if valid, or null if invalid.
+     */
+    public static function getPasetoTokenClaims(string $receivedToken, string $sharedKey): ?array {
+        try {
+            // Create a symmetric key for PASETO
+            $symmetricKey = new SymmetricKey($sharedKey, new Version4());
+            // Initialize a PASETO token parser
+            $parser = new Parser();
+            $parser->setKey($symmetricKey);
+            // Adding rules to be checked against the token
+            $parser->addRule(new ValidAt);
+            $parser->addRule(new IssuedBy('ShibbeeMoviesAPI'));
+            $parser->setPurpose(Purpose::local());
+            // Only allow version 4
+            $parser->setAllowedVersions(ProtocolCollection::v4());
+            // Parse and validate the token
+            $parsedToken = $parser->parse($receivedToken, false);
+            // Return the extracted claims from the token
+            return $parsedToken->getClaims();
+        } catch (\Throwable $throwable) {
+            \var_export($throwable->getMessage());
+            // Return null if the token is invalid or any error occurs
+            return null;
         }
     }
 }
