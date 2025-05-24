@@ -122,6 +122,7 @@ class QrCode {
             // Return the generated QR code image
             return $result;
         } catch (\Throwable $throwable) {
+            \var_export($throwable->getMessage());
             return "";
         }
     }

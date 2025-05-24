@@ -18,7 +18,7 @@ class DatabaseFile {
     /**
      * @var PDO The database instance
      */
-    private PDO $db;
+    private ?PDO $db;
 
     /**
      * @var string The name of the database file
@@ -150,17 +150,20 @@ class DatabaseFile {
      * @return string|false Returns the last inserted ID (as a string) on success, or false on failure.
      */
     public function insert(string $tableName, array $data): string | false {
-        // Prepare the columns and placeholders for the insert query
-        $columns = implode(", ", array_keys($data));
-        $placeholders = ":" . implode(", :", array_keys($data));
-        // Construct the SQL query for insertion
-        $sql = "INSERT INTO " . $tableName . " (" . $columns . ") VALUES (" . $placeholders . ")";
-        // Prepare the SQL statement
-        $stmt = $this->db->prepare($sql);
-        // Execute the statement with the provided data
-        $stmt->execute($data);
-        // Return the last inserted ID
-        return $this->db->lastInsertId();
+        if ($this->db === null) {
+            return false;
+        } else { // Prepare the columns and placeholders for the insert query
+            $columns = implode(", ", array_keys($data));
+            $placeholders = ":" . implode(", :", array_keys($data));
+            // Construct the SQL query for insertion
+            $sql = "INSERT INTO " . $tableName . " (" . $columns . ") VALUES (" . $placeholders . ")";
+            // Prepare the SQL statement
+            $stmt = $this->db->prepare($sql);
+            // Execute the statement with the provided data
+            $stmt->execute($data);
+            // Return the last inserted ID
+            return $this->db->lastInsertId();
+        }
     }
 
     /**
@@ -176,24 +179,28 @@ class DatabaseFile {
      * @return array An array of results, each as an associative array where the keys are column names.
      */
     public function select(string $tableName, array $conditions = [], string $columns = "*"): array {
-        // Construct the base SQL query for selection
-        $sql = "SELECT " . $columns . " FROM " . $tableName;
-        // If conditions are provided, append the WHERE clause
-        if (!empty($conditions)) {
-            $where = [];
-            foreach ($conditions as $column => $value) {
-                // Add each condition as `column = :column`
-                $where[] = $column . " = :" . $column;
+        if ($this->db === null) {
+            return array();
+        } else {
+            // Construct the base SQL query for selection
+            $sql = "SELECT " . $columns . " FROM " . $tableName;
+            // If conditions are provided, append the WHERE clause
+            if (!empty($conditions)) {
+                $where = [];
+                foreach ($conditions as $column => $value) {
+                    // Add each condition as `column = :column`
+                    $where[] = $column . " = :" . $column;
+                }
+                // Join multiple conditions with AND
+                $sql .= " WHERE " . implode(" AND ", $where);
             }
-            // Join multiple conditions with AND
-            $sql .= " WHERE " . implode(" AND ", $where);
+            // Prepare the SQL statement
+            $stmt = $this->db->prepare($sql);
+            // Execute the statement with the provided conditions
+            $stmt->execute($conditions);
+            // Fetch and return all results as an associative array
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        // Prepare the SQL statement
-        $stmt = $this->db->prepare($sql);
-        // Execute the statement with the provided conditions
-        $stmt->execute($conditions);
-        // Fetch and return all results as an associative array
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -209,32 +216,36 @@ class DatabaseFile {
      * @return int The number of affected rows.
      */
     public function update(string $tableName, array $data, array $conditions = []): int {
-        // Prepare the SET clause for the UPDATE query.
-        $clauses = [];
-        foreach ($data as $column => $value) {
-            $clauses[] = "$column = :$column";
-        }
-        // Construct the SQL query to update the table.
-        $sql = "UPDATE $tableName SET " . implode(", ", $clauses);
-        // If conditions are provided, add the WHERE clause.
-        if (!empty($conditions)) {
-            $wheres = [];
-            foreach ($conditions as $column => $value) {
-                // Add each condition as `column = :where_column`
-                $wheres[] = "$column = :where_$column";
-            }
-            $sql .= " WHERE " . implode(" AND ", $wheres);
-            // Prefix condition keys with `where_` to distinguish from the update data
-            $params = array_merge($data, array_combine(array_map(fn($key) => "where_" . $key, array_keys($conditions)), $conditions));
+        if ($this->db === null) {
+            return 0;
         } else {
-            // No conditions, update all rows
-            $params = $data;
+            // Prepare the SET clause for the UPDATE query.
+            $clauses = [];
+            foreach ($data as $column => $value) {
+                $clauses[] = "$column = :$column";
+            }
+            // Construct the SQL query to update the table.
+            $sql = "UPDATE $tableName SET " . implode(", ", $clauses);
+            // If conditions are provided, add the WHERE clause.
+            if (!empty($conditions)) {
+                $wheres = [];
+                foreach ($conditions as $column => $value) {
+                    // Add each condition as `column = :where_column`
+                    $wheres[] = "$column = :where_$column";
+                }
+                $sql .= " WHERE " . implode(" AND ", $wheres);
+                // Prefix condition keys with `where_` to distinguish from the update data
+                $params = array_merge($data, array_combine(array_map(fn($key) => "where_" . $key, array_keys($conditions)), $conditions));
+            } else {
+                // No conditions, update all rows
+                $params = $data;
+            }
+            // Prepare and execute the SQL statement with the data and conditions
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            // Return the number of affected rows
+            return $stmt->rowCount();
         }
-        // Prepare and execute the SQL statement with the data and conditions
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        // Return the number of affected rows
-        return $stmt->rowCount();
     }
 
     /**
@@ -248,18 +259,22 @@ class DatabaseFile {
      * @return int The number of affected rows.
      */
     public function delete(string $tableName, array $conditions): int {
-        // Prepare the WHERE clause for the DELETE query
-        $where = [];
-        foreach ($conditions as $column => $value) {
-            $where[] = $column . " = :" . $column;
+        if ($this->db === null) {
+            return 0;
+        } else {
+            // Prepare the WHERE clause for the DELETE query
+            $where = [];
+            foreach ($conditions as $column => $value) {
+                $where[] = $column . " = :" . $column;
+            }
+            // Construct the SQL query to delete rows from the table
+            $sql = "DELETE FROM " . $tableName . " WHERE " . implode(" AND ", $where);
+            // Prepare and execute the SQL statement with the conditions
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($conditions);
+            // Return the number of affected rows
+            return $stmt->rowCount();
         }
-        // Construct the SQL query to delete rows from the table
-        $sql = "DELETE FROM " . $tableName . " WHERE " . implode(" AND ", $where);
-        // Prepare and execute the SQL statement with the conditions
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($conditions);
-        // Return the number of affected rows
-        return $stmt->rowCount();
     }
 
     /**
@@ -271,8 +286,12 @@ class DatabaseFile {
      * @return int|false Returns the number of affected rows on success, or false on failure.
      */
     public function execute($sql): int|false {
-        // Execute the SQL query and return the result
-        return $this->db->exec($sql);
+        if ($this->db === null) {
+            return false;
+        } else {
+            // Execute the SQL query and return the result
+            return $this->db->exec($sql);
+        }
     }
 
     /**
@@ -285,49 +304,53 @@ class DatabaseFile {
      * @return bool Returns true if the export was successful, false if an error occurred.
      */
     public function exportToSQL(string $outputFile): bool {
-        try {
-            // Open the output SQL file for writing
-            $sqlFile = fopen($outputFile, 'w');
-            // Check if the file was successfully opened
-            if (!$sqlFile) {
-                throw new Exception("Unable to open the output file for writing.");
-            } else {
-                // Write the SQL dump header at the top of the SQL file
-                fwrite($sqlFile, "-- SQLite Database Export\n\n");
-                // Query to get the list of table names from the SQLite database
-                $tables = $this->db->query("SELECT name FROM sqlite_master WHERE type='table'")->fetchAll(PDO::FETCH_ASSOC);
-                // Loop through all tables in the database
-                foreach ($tables as $table) {
-                    $tableName = $table['name'];
-                    // Write the CREATE TABLE statement for the current table
-                    $createTableStmt = $this->db->query("SELECT sql FROM sqlite_master WHERE type='table' AND name='" . $tableName . "'")->fetch(PDO::FETCH_ASSOC);
-                    fwrite($sqlFile, $createTableStmt['sql'] . ";\n\n");
-                    // Query to get all rows from the current table
-                    $rows = $this->db->query("SELECT * FROM " . $tableName . "")->fetchAll(PDO::FETCH_ASSOC);
-                    // Loop through all rows and create INSERT INTO statements
-                    foreach ($rows as $row) {
-                        // Get the column names and their respective values
-                        $columns = array_keys($row);
-                        $values = array_map(function ($value) {
-                            // Escape null values and escape strings
-                            return $value === null ? 'NULL' : "'" . addslashes($value) . "'";
-                        }, array_values($row));
-                        // Create the INSERT INTO statement for the current row
-                        $insertStmt = "INSERT INTO " . $tableName . " (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $values) . ");\n";
-                        fwrite($sqlFile, $insertStmt);
-                    }
-                    // Add a newline after each table's data
-                    fwrite($sqlFile, "\n");
-                }
-                // Close the SQL file after writing all data
-                fclose($sqlFile);
-
-                // Return true indicating the export was successful
-                return true;
-            }
-        } catch (\Throwable $th) {
-            // Return false in case of any errors
+        if ($this->db === null) {
             return false;
+        } else {
+            try {
+                // Open the output SQL file for writing
+                $sqlFile = fopen($outputFile, 'w');
+                // Check if the file was successfully opened
+                if (!$sqlFile) {
+                    throw new Exception("Unable to open the output file for writing.");
+                } else {
+                    // Write the SQL dump header at the top of the SQL file
+                    fwrite($sqlFile, "-- SQLite Database Export\n\n");
+                    // Query to get the list of table names from the SQLite database
+                    $tables = $this->db->query("SELECT name FROM sqlite_master WHERE type='table'")->fetchAll(PDO::FETCH_ASSOC);
+                    // Loop through all tables in the database
+                    foreach ($tables as $table) {
+                        $tableName = $table['name'];
+                        // Write the CREATE TABLE statement for the current table
+                        $createTableStmt = $this->db->query("SELECT sql FROM sqlite_master WHERE type='table' AND name='" . $tableName . "'")->fetch(PDO::FETCH_ASSOC);
+                        fwrite($sqlFile, $createTableStmt['sql'] . ";\n\n");
+                        // Query to get all rows from the current table
+                        $rows = $this->db->query("SELECT * FROM " . $tableName . "")->fetchAll(PDO::FETCH_ASSOC);
+                        // Loop through all rows and create INSERT INTO statements
+                        foreach ($rows as $row) {
+                            // Get the column names and their respective values
+                            $columns = array_keys($row);
+                            $values = array_map(function ($value) {
+                                // Escape null values and escape strings
+                                return $value === null ? 'NULL' : "'" . addslashes($value) . "'";
+                            }, array_values($row));
+                            // Create the INSERT INTO statement for the current row
+                            $insertStmt = "INSERT INTO " . $tableName . " (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $values) . ");\n";
+                            fwrite($sqlFile, $insertStmt);
+                        }
+                        // Add a newline after each table's data
+                        fwrite($sqlFile, "\n");
+                    }
+                    // Close the SQL file after writing all data
+                    fclose($sqlFile);
+
+                    // Return true indicating the export was successful
+                    return true;
+                }
+            } catch (\Throwable $th) {
+                // Return false in case of any errors
+                return false;
+            }
         }
     }
 }
