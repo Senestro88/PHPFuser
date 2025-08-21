@@ -1,0 +1,60 @@
+# Disable MultiViews to avoid conflicts with content negotiation
+# (prevents Apache from guessing file extensions and breaking routing)
+Options -MultiViews
+
+# Enable URL rewriting engine
+RewriteEngine On
+
+# -----------------------------------------------------------
+# 1. Block direct access to index.php
+# -----------------------------------------------------------
+# NOTE: index.php is automatically accessed even when it's a directory, like /posts/
+# If someone tries to access /index.php directly, deny it
+# RewriteRule ^index\.php$ - [F,L]
+
+# -----------------------------------------------------------
+# 2. Redirect requests that *contain* index.php in the URL
+# -----------------------------------------------------------
+# Example: /index.php/posts?id=1  -->  /posts?id=1
+# This keeps URLs clean and consistent
+RewriteCond %{THE_REQUEST} \s/+index\.php(/[^\s]*)?
+RewriteRule ^index\.php(?:/(.*))?$ /%1 [R=301,L]
+
+# -----------------------------------------------------------
+# 3. Allow existing files and directories to be served directly
+# -----------------------------------------------------------
+# If the requested file exists, serve it directly (skip rewriting)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# If the requested directory exists, serve it directly (skip rewriting)
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# -----------------------------------------------------------
+# 4. Remove trailing slashes from URLs (canonical form)
+# -----------------------------------------------------------
+# Example: /posts/  -->  /posts
+# Only applies if it's not a real directory
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+?)/$ /$1 [R=301,L]
+
+# -----------------------------------------------------------
+# 5. Force lowercase URLs (SEO canonicalization)
+# -----------------------------------------------------------
+# NOTE: Requires RewriteMap in the server config (not allowed in .htaccess)
+# In your Apache config (httpd.conf or vhost):
+#   RewriteMap tolower int:tolower
+#
+# Then uncomment the rule below:
+#
+# RewriteCond %{REQUEST_URI} [A-Z]
+# RewriteRule (.*) ${tolower:$1} [R=301,L]
+
+# -----------------------------------------------------------
+# 6. Route everything else to index.php
+# -----------------------------------------------------------
+# Otherwise, route everything else to index.php
+# QSA (Query String Append): preserves any ?query=params
+# L (Last rule): stops processing further rewrite rules
+RewriteRule ^ index.php [QSA,L]
