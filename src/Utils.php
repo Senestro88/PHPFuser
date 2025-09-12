@@ -509,7 +509,7 @@ class Utils {
      * Get the current url
      * @return string
      */
-    public static function currentUrl(): string {
+    public static function hostWithProtocol(): string {
         return self::protocol() . "://" . self::host();
     }
 
@@ -518,7 +518,7 @@ class Utils {
      * @return string
      */
     public static function completeCurrentUrl(): string {
-        return self::currentUrl() . \str_replace(array("//", "\\\\"), "/", self::requestURI());
+        return self::hostWithProtocol() . \str_replace(array("//", "\\\\"), "/", self::requestURI());
     }
 
     /**
@@ -2957,7 +2957,7 @@ class Utils {
      * @return string The root path.
      */
     public static function getDocumentRoot(bool $urlForm = false, bool $endForwardslash = true): string {
-        return $urlForm ? Utils::currentUrl() . ($endForwardslash ? '/' : '') : Path::insert_dir_separator(getenv('DOCUMENT_ROOT'), $endForwardslash);
+        return $urlForm ? Utils::hostWithProtocol() . ($endForwardslash ? '/' : '') : Path::insert_dir_separator(getenv('DOCUMENT_ROOT'), $endForwardslash);
     }
 
     /**
