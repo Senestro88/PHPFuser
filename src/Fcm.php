@@ -33,7 +33,7 @@ class Fcm {
             // FCM v1 endpoint for sending messages
             $url = "https://fcm.googleapis.com/v1/projects/" . $projectId . "/messages:send";
             // HTTP headers with Bearer token authentication
-            $headers = ["Authorization: Bearer $accessToken", "Content-Type: application/json; UTF-8"];
+            $headers = ["Authorization: Bearer $accessToken", "Content-Type: application/json"];
             // The notification data
             $notification = ["title" => $title, "body"  => $body];
             // Message payload structure
@@ -92,18 +92,22 @@ class Fcm {
      * Reads the service account credentials from a JSON key file
      * and fetches an access token with the required scope.
      *
-     * @param string $serviceAccountPath Path to the service account JSON key file.
+     * @param string $firebaseAdminSDKJsonFile Path to the firebase admin sdk service account JSON key file.
      *
      * @return string|null Access token string if successful, null if failed.
      */
-    public static function getAccessToken(string $serviceAccountPath): ?string {
-        // Required scope for Firebase Cloud Messaging
-        $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
-        // Load service account credentials
-        $credentials = new ServiceAccountCredentials($scopes, $serviceAccountPath);
-        // Fetch OAuth2 token
-        $token = $credentials->fetchAuthToken();
-        // Return access token if available, otherwise null
-        return !isset($token['access_token']) ? null : $token['access_token'];
+    public static function getAccessToken(string $firebaseAdminSDKJsonFile): ?string {
+        try {
+            // Required scope for Firebase Cloud Messaging
+            $scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+            // Load service account credentials
+            $credentials = new ServiceAccountCredentials($scopes, $firebaseAdminSDKJsonFile);
+            // Fetch OAuth2 token
+            $token = $credentials->fetchAuthToken();
+            // Return access token if available, otherwise null
+            return $token['access_token'] ?? null;
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 }
